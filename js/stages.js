@@ -10,21 +10,101 @@
   const ST = window.SoundTravels = window.SoundTravels || {};
   const cfg = () => ST.config;
 
+  // ---------- prolific id ----------
+  const prolificId = (jsPsych) => ({
+    type: jsPsychSurveyHtmlForm,
+    preamble: `
+      <div class="intro-wrap" style="text-align:center">
+        <h2>Participant ID</h2>
+        <p>Please enter your Prolific ID below.</p>
+      </div>`,
+    html: `
+      <div style="max-width:400px;margin:0 auto">
+        <label for="prolific_id" style="display:block;font-weight:500;margin-bottom:8px">Prolific ID</label>
+        <input type="text" id="prolific_id" name="prolific_id" required
+               placeholder="Enter your Prolific ID"
+               style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #cfc9bb;border-radius:6px;font:inherit" />
+      </div>`,
+    button_label: "Continue",
+    on_finish: data => {
+      jsPsych.data.addProperties({ prolific_id: data.response.prolific_id });
+    },
+    data: { stage: "prolific_id" },
+  });
+
+  // ---------- music background (Zhou & Schubert) ----------
+  const musicBackground = () => ({
+    type: jsPsychSurveyHtmlForm,
+    preamble: `
+      <div class="intro-wrap" style="text-align:center">
+        <h2>Music Background</h2>
+        <p>Which title best describes you?</p>
+      </div>`,
+    html: `
+      <div class="radio-stack">
+        <label><input type="radio" name="music_background" value="nonmusician" required /> Nonmusician</label>
+        <label><input type="radio" name="music_background" value="music_loving_nonmusician" /> Music-loving nonmusician</label>
+        <label><input type="radio" name="music_background" value="amateur_musician" /> Amateur musician</label>
+        <label><input type="radio" name="music_background" value="serious_amateur_musician" /> Serious amateur musician</label>
+        <label><input type="radio" name="music_background" value="semi_professional_musician" /> Semi-professional musician</label>
+        <label><input type="radio" name="music_background" value="professional_musician" /> Professional musician</label>
+      </div>`,
+    button_label: "Continue",
+    data: { stage: "music_background" },
+  });
+
   // ---------- consent ----------
   const consent = (jsPsych) => ({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <div class="intro-wrap">
-        <h2>Consent</h2>
-        <p>This study is part of the <em>Sound Travels</em> field-recording project at Northwestern University.
-           You'll listen to short soundscape recordings and rate the feeling each one evokes.</p>
-        <p>By continuing, you agree that your anonymous ratings can be used for research on
-           auditory affect. No identifying information is collected. You may close the tab at
-           any time to withdraw.</p>
-        <p style="font-size:13px;color:#666">If you have questions, contact
-           <a href="mailto:daniel.shanahan@gmail.com">daniel.shanahan@gmail.com</a>.</p>
+        <h2>Thank you for helping with this research!</h2>
+
+        <p><em>How you Focus</em> is an app that is part of a study funded by the National Science
+           Foundation understanding how sound impacts visitors.</p>
+
+        <p>Participating is your choice. Your responses will be anonymous.</p>
+
+        <p>Learn more below or get started now, which means you agree your responses will become
+           part of the Sound Travels research.</p>
+
+        <p>By testing out this app you are part of the <em>Sound Travels</em> research project.
+           Please feel free to skip questions or stop the questionnaire if you need to.</p>
+
+        <p>You may choose not to participate without any negative consequences to you, and there
+           are no specific benefits to you associated with participating.</p>
+
+        <p>Anytime you share information online there are risks of hacking or interception.
+           We're using a secure system to collect these data, but we can't completely eliminate
+           this risk. We're minimizing this risk in the following ways:</p>
+
+        <ul>
+          <li>Your answers will be totally anonymous. We are not collecting any personally
+              identifying information, so your identity won't be connected to your participation
+              or your answers in any direct way.</li>
+          <li>We'll store all electronic data on a password-protected, encrypted computer or
+              cloud storage.</li>
+          <li>The data we collect may be used for reports, presentations, or future research.</li>
+        </ul>
+
+        <p>If you have any questions or concerns, please feel free to reach out to the directors
+           of the research:</p>
+        <ul>
+          <li>Justin Meyer — <a href="mailto:jmeyer@cosi.org">jmeyer@cosi.org</a></li>
+          <li>Martha Merson — <a href="mailto:martha_merson@terc.edu">martha_merson@terc.edu</a></li>
+          <li>Daniel Shanahan — <a href="mailto:daniel.shanahan@northwestern.edu">daniel.shanahan@northwestern.edu</a></li>
+        </ul>
+
+        <p>If you have any questions or concerns regarding your rights as a participant in the
+           research, please feel free to reach out to the institutional review board representative
+           at TERC. TERC is a non-profit education research and development organization in
+           Cambridge, Massachusetts. TERC is overseeing the research, and the following
+           institutional review board representative is not a part of the research team:</p>
+        <ul>
+          <li>Ibrahim Dahlstrom-Hakki — <a href="mailto:ibrahim_dahlstrom-hakki@terc.edu">ibrahim_dahlstrom-hakki@terc.edu</a></li>
+        </ul>
       </div>`,
-    choices: ["I consent — continue", "I do not consent"],
+    choices: ["Get started", "No thanks"],
     on_finish: data => {
       if (data.response === 1) {
         document.body.innerHTML = "<p style='text-align:center;margin-top:60px'>Thanks anyway. You can close this tab.</p>";
@@ -197,5 +277,5 @@
     data: { stage: "debrief" },
   });
 
-  ST.stages = { consent, instructions, preload, practiceTrial, phaseBreak, demographics, debrief };
+  ST.stages = { prolificId, musicBackground, consent, instructions, preload, practiceTrial, phaseBreak, demographics, debrief };
 })();

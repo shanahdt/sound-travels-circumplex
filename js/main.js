@@ -77,6 +77,8 @@
 
     const timeline = [
       ST.stages.consent(jsPsych),
+      ST.stages.prolificId(jsPsych),
+      ST.stages.musicBackground(),
       ST.stages.instructions(totalRated),
       ST.stages.preload(audioUrls),
       ST.stages.practiceTrial(split.practice),

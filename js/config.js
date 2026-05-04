@@ -18,6 +18,9 @@
     N_PHASE_2: 12,    // mixed across clusters, anti-repeat
     N_PHASE_3: 10,    // within-cluster (fine-grained)
 
+    // DataPipe — get this ID from pipe.jspsych.org after creating an experiment
+    DATAPIPE_ID: "mwgs2",
+
     // UI
     PLOT_PIXELS: 500,
   };

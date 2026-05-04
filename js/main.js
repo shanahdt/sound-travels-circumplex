@@ -49,8 +49,9 @@
     }
     loading.remove();
 
-    // Per-participant deterministic seed.
+    // Per-participant deterministic seed + unique ID for DataPipe filename.
     const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+    const participantId = `p_${seed}`;
     const rng  = ST.makeRNG(seed);
     const split = ST.buildTrialList(manifest, rng);
 
@@ -85,6 +86,13 @@
       ST.stages.phaseBreak(split.phase1.length + split.phase2.length, totalRated, "Phase 2 complete \u2014 the last set focuses on a single soundscape type."),
       ...split.phase3.map(buildRatingTrial),
       ST.stages.demographics(),
+      {
+        type: jsPsychPipe,
+        action: "save",
+        experiment_id: cfg.DATAPIPE_ID,
+        filename: `${participantId}.csv`,
+        data_string: () => jsPsych.data.get().csv(),
+      },
       ST.stages.debrief(),
     ];
 

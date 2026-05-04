@@ -1,0 +1,108 @@
+:root {
+  --plot-size: 500px;
+  --bg: #f6f4ef;
+  --ink: #222;
+  --accent: #2563eb;
+  --accent-2: #db2777;
+  --grid: #cdc8be;
+}
+body { background: var(--bg); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+.jspsych-display-element { max-width: 760px; }
+h1, h2 { font-weight: 600; }
+
+/* ----- circumplex ----- */
+.circumplex-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.audio-row {
+  display: flex; align-items: center; gap: 14px;
+  background: #fff; border: 1px solid #e6e1d6; border-radius: 12px;
+  padding: 10px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.audio-row button {
+  background: var(--accent); color: #fff; border: 0; border-radius: 8px;
+  padding: 8px 14px; font: inherit; cursor: pointer;
+}
+.audio-row button:disabled { opacity: .4; cursor: default; }
+.audio-meter {
+  width: 200px; height: 6px; background: #e7e3d8; border-radius: 3px; overflow: hidden;
+}
+.audio-meter > span {
+  display: block; height: 100%; width: 0%; background: var(--accent); transition: width .1s linear;
+}
+.replay-count { font-size: 13px; color: #555; }
+
+.plot {
+  position: relative;
+  width: var(--plot-size); height: var(--plot-size);
+  background: #fff; border: 1px solid #d8d3c6; border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.05);
+  user-select: none; touch-action: none;
+}
+.plot .axis-h, .plot .axis-v { position: absolute; background: var(--grid); }
+.plot .axis-h { left: 0; right: 0; top: 50%; height: 1px; }
+.plot .axis-v { top: 0; bottom: 0; left: 50%; width: 1px; }
+.plot .ring  { position: absolute; inset: 6%; border: 1px dashed var(--grid); border-radius: 50%; pointer-events: none; }
+
+.axis-label {
+  position: absolute; font-size: 13px; color: #555; pointer-events: none; font-style: italic;
+}
+.anchor {
+  position: absolute; font-size: 13px; color: #444; font-weight: 600; pointer-events: none;
+  background: rgba(255,255,255,.8); padding: 1px 6px; border-radius: 4px;
+}
+
+.marker {
+  position: absolute; width: 22px; height: 22px;
+  background: var(--accent-2); border: 2px solid #fff;
+  border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  transform: translate(-50%, -50%); cursor: grab;
+  transition: opacity .15s;
+}
+.marker:active { cursor: grabbing; }
+.marker.hidden { opacity: 0; pointer-events: none; }
+
+.progress {
+  width: var(--plot-size); height: 4px; background: #e7e3d8; border-radius: 2px; overflow: hidden;
+}
+.progress > span { display: block; height: 100%; background: var(--accent-2); }
+
+.controls { display: flex; gap: 10px; align-items: center; }
+.controls button {
+  border: 0; background: var(--ink); color: #fff;
+  padding: 10px 22px; border-radius: 8px; font: inherit; cursor: pointer;
+}
+.controls button:disabled { background: #b8b4ab; cursor: default; }
+
+.hint { font-size: 13px; color: #666; }
+
+/* ----- intro / outro / framing ----- */
+.intro-wrap { max-width: 640px; margin: 0 auto; line-height: 1.55; }
+.intro-wrap p { margin: 0.6em 0; }
+.intro-wrap .practice-banner {
+  background: #fff7e0; border: 1px solid #e6d39a; border-radius: 8px;
+  padding: 8px 14px; font-size: 14px; color: #6b4f00; margin: 12px 0;
+}
+.mini-plot {
+  width: 220px; height: 220px; margin: 12px auto;
+  border: 1px solid #d8d3c6; border-radius: 10px; position: relative; background: #fff;
+}
+.mini-plot .ring { position: absolute; inset: 6%; border: 1px dashed var(--grid); border-radius: 50%; }
+.mini-plot .h, .mini-plot .v { position: absolute; background: var(--grid); }
+.mini-plot .h { left: 0; right: 0; top: 50%; height: 1px; }
+.mini-plot .v { top: 0; bottom: 0; left: 50%; width: 1px; }
+.mini-plot .lbl {
+  position: absolute; font-size: 11px; color: #555;
+}
+
+/* ----- demographics form ----- */
+.demo-form { display: grid; gap: 18px; max-width: 520px; margin: 0 auto; text-align: left; }
+.demo-form label { display: block; font-size: 14px; font-weight: 500; color: #333; margin-bottom: 4px; }
+.demo-form .field-help { font-size: 12px; color: #777; font-weight: 400; }
+.demo-form input[type="number"], .demo-form input[type="text"], .demo-form select {
+  width: 100%; box-sizing: border-box;
+  padding: 8px 10px; border: 1px solid #cfc9bb; border-radius: 6px;
+  background: #fff; font: inherit;
+}
+.demo-form .radio-row { display: flex; gap: 14px; flex-wrap: wrap; font-weight: 400; }
+.demo-form .radio-row label { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; margin: 0; cursor: pointer; }

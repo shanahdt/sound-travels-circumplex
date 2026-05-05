@@ -13,7 +13,13 @@
     const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
     const participantId = `p_${seed}`;
 
+    // Give jsPsych its own container so its injected styles don't affect the body layout.
+    const expContainer = document.createElement('div');
+    expContainer.id = 'exp-container';
+    document.body.appendChild(expContainer);
+
     const jsPsych = initJsPsych({
+      display_element: expContainer,
       on_finish: () => {
         try { window.__jsPsychData = jsPsych.data.get().values(); } catch (e) {}
         // Send to DataPipe regardless of how far the participant got.
@@ -36,7 +42,7 @@
     loading.className = "intro-wrap";
     loading.style.textAlign = "center";
     loading.innerHTML = "<p>Loading study...</p>";
-    document.body.appendChild(loading);
+    expContainer.appendChild(loading);
 
     let manifest;
     try {
@@ -77,7 +83,7 @@
       ST.stages.consent(jsPsych),
       ST.stages.prolificId(jsPsych),
       ST.stages.disability(),
-      ST.stages.taskPreferences(),
+      ...ST.stages.taskPages,
       ST.stages.lifeRightNow(),
       ST.stages.growingUp(),
       ST.stages.culture(),

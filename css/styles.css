@@ -6,15 +6,23 @@
   --accent-2: #db2777;
   --grid: #cdc8be;
 }
-html, body { margin: 0; padding: 0; min-height: 100vh; }
+html, body { margin: 0; padding: 0; min-height: 100vh; background: var(--bg); }
 body {
   background: var(--bg); color: var(--ink);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  display: flex; align-items: center; justify-content: center;
 }
+#exp-container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 56px 16px 48px;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+/* Neutralize any overflow/height jsPsych injects onto its display element */
 .jspsych-display-element {
-  width: 100%; max-width: 760px;
-  padding: 24px 16px; box-sizing: border-box;
+  position: static !important;
+  height: auto !important;
+  overflow: visible !important;
 }
 h1, h2 { font-weight: 600; }
 

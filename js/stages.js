@@ -90,9 +90,9 @@
         <p>If you have any questions or concerns, please feel free to reach out to the directors
            of the research:</p>
         <ul>
+        <li>Martha Merson — <a href="mailto:martha_merson@terc.edu">martha_merson@terc.edu</a></li>
         <li>Daniel Shanahan — <a href="mailto:daniel.shanahan@northwestern.edu">daniel.shanahan@northwestern.edu</a></li>
           <li>Justin Meyer — <a href="mailto:jmeyer@cosi.org">jmeyer@cosi.org</a></li>
-          <li>Martha Merson — <a href="mailto:martha_merson@terc.edu">martha_merson@terc.edu</a></li>
         </ul>
 
         <p>If you have any questions or concerns regarding your rights as a participant in the research, 
@@ -336,27 +336,28 @@
     data: { stage: "disability" },
   });
 
-  // ---- task preferences ----
-  const taskPreferences = () => ({
-    type: jsPsychSurveyHtmlForm,
-    preamble: `
-      <div class="intro-wrap" style="text-align:center">
-        <h2>Sound and Focus</h2>
-        <p>The next few questions ask about what kind of room you would want to be in to be
-           successful at different tasks. Choose the room you would prefer the most, based
-           on its sound conditions.</p>
-      </div>`,
-    html: `
-      <div style="max-width:600px;margin:0 auto">
-        ${taskSection('Imagine you have to write a report for work or school.', 'task_write_report')}
-        ${taskSection('Imagine you need to memorize information for a test.', 'task_memorize')}
-        ${taskSection('Imagine you want to read a book for pleasure.', 'task_read_book')}
-        ${taskSection('Imagine you want to chat with friends.', 'task_chat_friends')}
-        ${taskSection('Imagine you need to listen to instructions.', 'task_listen_instruct')}
-      </div>`,
-    button_label: "Continue",
-    data: { stage: "task_preferences" },
-  });
+  // ---- task preferences (one per page) ----
+  function makeTaskPage(prompt, field, index, total) {
+    return {
+      type: jsPsychSurveyHtmlForm,
+      preamble: `
+        <div class="intro-wrap" style="text-align:center">
+          <h2>Sound and Focus <span style="font-size:15px;font-weight:400;color:#666">(${index} of ${total})</span></h2>
+          <p>Choose the room you would prefer the most to be successful at this task.</p>
+        </div>`,
+      html: `<div style="max-width:600px;margin:0 auto">${taskSection(prompt, field)}</div>`,
+      button_label: "Continue",
+      data: { stage: "task_preferences" },
+    };
+  }
+
+  const taskPages = [
+    makeTaskPage('Imagine you have to write a report for work or school.', 'task_write_report', 1, 5),
+    makeTaskPage('Imagine you need to memorize information for a test.',   'task_memorize',      2, 5),
+    makeTaskPage('Imagine you want to read a book for pleasure.',          'task_read_book',     3, 5),
+    makeTaskPage('Imagine you want to chat with friends.',                 'task_chat_friends',  4, 5),
+    makeTaskPage('Imagine you need to listen to instructions.',            'task_listen_instruct', 5, 5),
+  ];
 
   // ---- life right now ----
   const lifeRightNow = () => ({
@@ -425,5 +426,5 @@
     data: { stage: "culture" },
   });
 
-  ST.stages = { prolificId, disability, taskPreferences, lifeRightNow, growingUp, culture, musicBackground, consent, instructions, preload, practiceTrial, phaseBreak, demographics, debrief };
+  ST.stages = { prolificId, disability, taskPages, lifeRightNow, growingUp, culture, musicBackground, consent, instructions, preload, practiceTrial, phaseBreak, demographics, debrief };
 })();

@@ -128,7 +128,7 @@
           <span class="lbl" style="left:50%;top:4px;transform:translateX(-50%)">high</span>
           <span class="lbl" style="left:50%;bottom:4px;transform:translateX(-50%)">low</span>
         </div>
-        <p>The whole thing should take about 15 minutes. Wear headphones if you can, and
+        <p>The whole thing should take about 15-20 minutes. Wear headphones if you can, and
            settle on a comfortable volume before starting. We'll give you one practice trial
            first so you can learn the controls.</p>
       </div>`,

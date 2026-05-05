@@ -60,7 +60,7 @@
       <div class="intro-wrap">
         <h2>Thank you for helping with this research!</h2>
 
-        <p><em>How you Focus</em> is an app that is part of a study funded by the National Science
+        <p><em>Sounds and Emotions</em> is an app that is part of a study funded by the National Science
            Foundation understanding how sound impacts visitors.</p>
 
         <p>Participating is your choice. Your responses will be anonymous.</p>
@@ -128,7 +128,7 @@
           <span class="lbl" style="left:50%;top:4px;transform:translateX(-50%)">high</span>
           <span class="lbl" style="left:50%;bottom:4px;transform:translateX(-50%)">low</span>
         </div>
-        <p>The whole thing should take about 10 minutes. Wear headphones if you can, and
+        <p>The whole thing should take about 15 minutes. Wear headphones if you can, and
            settle on a comfortable volume before starting. We'll give you one practice trial
            first so you can learn the controls.</p>
       </div>`,
@@ -266,17 +266,10 @@
         <h2>That's it \u2014 thank you.</h2>
         <p>The data you've provided will help train models that can predict the
            emotional impression of soundscapes from their audio features alone.</p>
-        <p>If you'd like to know more about the project, or have any feedback, please let us know on Prolific!</p>
-        <div style="margin:32px auto;padding:24px;max-width:420px;background:#f5f2eb;border-radius:10px;text-align:center">
-          <p style="margin:0 0 8px;font-weight:600">Your Prolific completion code</p>
-          <p style="font-size:28px;font-weight:700;letter-spacing:3px;margin:0 0 16px">C7KCJNT1</p>
-          <a href="https://app.prolific.com/submissions/complete?cc=C7KCJNT1"
-             style="display:inline-block;padding:12px 28px;background:#333;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
-            Click here to submit on Prolific
-          </a>
-        </div>
+        <p>If you'd like to know more about the project, or have any feedback, you can
+           email <a href="mailto:daniel.shanahan@gmail.com">daniel.shanahan@gmail.com</a>.</p>
       </div>`,
-    choices: ["Done"],
+    choices: ["Finish"],
     data: { stage: "debrief" },
   });
 

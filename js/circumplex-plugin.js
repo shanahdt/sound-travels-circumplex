@@ -97,6 +97,13 @@
       audio.addEventListener("timeupdate", () => {
         if (audio.duration) bar.style.width = `${(100 * audio.currentTime / audio.duration).toFixed(1)}%`;
       });
+      audio.addEventListener("error", () => {
+        played = true;
+        playBtn.disabled = true;
+        playBtn.textContent = "Audio unavailable";
+        replayLbl.textContent = "failed to load";
+        updateNextState();
+      });
       audio.play().catch(() => {});
 
       const placeAt = (cx, cy) => {

@@ -78,6 +78,11 @@
     const timeline = [
       ST.stages.consent(jsPsych),
       ST.stages.prolificId(jsPsych),
+      ST.stages.disability(),
+      ST.stages.taskPreferences(),
+      ST.stages.lifeRightNow(),
+      ST.stages.growingUp(),
+      ST.stages.culture(),
       ST.stages.musicBackground(),
       ST.stages.instructions(totalRated),
       ST.stages.preload(audioUrls),

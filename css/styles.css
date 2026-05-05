@@ -107,6 +107,38 @@ h1, h2 { font-weight: 600; }
   position: absolute; font-size: 11px; color: #555;
 }
 
+/* ----- task preferences ----- */
+.task-section { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #e6e1d6; }
+.task-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.task-q { font-weight: 600; font-size: 15px; margin: 0 0 10px; }
+.task-other-input {
+  margin-top: 8px; width: 100%; box-sizing: border-box;
+  padding: 8px 10px; border: 1px solid #cfc9bb; border-radius: 6px;
+  background: #fff; font: inherit; font-size: 14px;
+}
+.radio-stack.compact label { padding: 7px 12px; font-size: 14px; }
+
+/* ----- likert scale ----- */
+.likert-scale { max-width: 640px; margin: 0 auto; }
+.likert-legend { font-size: 13px; color: #555; text-align: center; margin: 0 0 14px; }
+.likert-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 10px 0; border-bottom: 1px solid #f0ece4;
+}
+.likert-row:last-child { border-bottom: none; }
+.likert-q { flex: 1; font-size: 14px; line-height: 1.4; }
+.likert-options { display: flex; gap: 4px; flex-shrink: 0; }
+.likert-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  width: 38px; font-size: 12px; color: #666; cursor: pointer;
+}
+.likert-btn input { cursor: pointer; margin: 0; }
+@media (max-width: 520px) {
+  .likert-row { flex-wrap: wrap; }
+  .likert-options { width: 100%; justify-content: space-between; }
+  .likert-btn { flex: 1; }
+}
+
 /* ----- stacked radio list (music background) ----- */
 .radio-stack {
   display: flex; flex-direction: column; gap: 12px;

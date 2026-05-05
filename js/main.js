@@ -18,43 +18,36 @@
     expContainer.id = 'exp-container';
     document.body.appendChild(expContainer);
 
-    // Throttled mid-experiment save: fires every 10 trials so dropout data isn't lost.
-    // Uses the same filename as the final save so each checkpoint overwrites the last.
-    let _trialsSinceLastSave = 0;
-    function periodicSave() {
-      _trialsSinceLastSave++;
-      if (_trialsSinceLastSave % 10 !== 0) return;
+    function pipePayload(data) {
+      return JSON.stringify({ experimentID: cfg.DATAPIPE_ID, filename: `${participantId}.csv`, data });
+    }
+    function fetchSave(data) {
       fetch("https://pipe.jspsych.org/api/data/", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "*/*" },
-        body: JSON.stringify({
-          experimentID: cfg.DATAPIPE_ID,
-          filename: `${participantId}.csv`,
-          data: jsPsych.data.get().csv(),
-        }),
-      }).catch(() => {}); // silent — never interrupt the experiment
+        body: pipePayload(data),
+      }).catch(() => {});
+    }
+    // sendBeacon is the only reliable way to save on tab/window close.
+    function beaconSave(data) {
+      navigator.sendBeacon(
+        "https://pipe.jspsych.org/api/data/",
+        new Blob([pipePayload(data)], { type: "application/json" })
+      );
     }
 
     const jsPsych = initJsPsych({
       display_element: expContainer,
-      on_trial_finish: periodicSave,
+      on_trial_finish: () => fetchSave(jsPsych.data.get().csv()),
       on_finish: () => {
         try { window.__jsPsychData = jsPsych.data.get().values(); } catch (e) {}
-        // Fallback save for dropouts — jsPsychPipe trial handles completers.
-        fetch("https://pipe.jspsych.org/api/data/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "*/*" },
-          body: JSON.stringify({
-            experimentID: cfg.DATAPIPE_ID,
-            filename: `${participantId}.csv`,
-            data: jsPsych.data.get().csv(),
-          }),
-        })
-          .then(r => { if (!r.ok) console.warn("DataPipe save failed:", r.status, r.statusText); })
-          .catch(e => console.warn("DataPipe save error:", e));
+        fetchSave(jsPsych.data.get().csv());
       },
     });
     window.__jsPsych = jsPsych;
+
+    // Save on tab close / navigation away — sendBeacon survives page unload.
+    window.addEventListener("beforeunload", () => beaconSave(jsPsych.data.get().csv()));
 
     const loading = document.createElement("div");
     loading.className = "intro-wrap";

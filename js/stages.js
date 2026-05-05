@@ -266,10 +266,17 @@
         <h2>That's it \u2014 thank you.</h2>
         <p>The data you've provided will help train models that can predict the
            emotional impression of soundscapes from their audio features alone.</p>
-        <p>If you'd like to know more about the project, or have any feedback, you can
-           email <a href="mailto:daniel.shanahan@gmail.com">daniel.shanahan@gmail.com</a>.</p>
+        <p>If you'd like to know more about the project, or have any feedback, please let us know on Prolific!</p>
+        <div style="margin:32px auto;padding:24px;max-width:420px;background:#f5f2eb;border-radius:10px;text-align:center">
+          <p style="margin:0 0 8px;font-weight:600">Your Prolific completion code</p>
+          <p style="font-size:28px;font-weight:700;letter-spacing:3px;margin:0 0 16px">C7KCJNT1</p>
+          <a href="https://app.prolific.com/submissions/complete?cc=C7KCJNT1"
+             style="display:inline-block;padding:12px 28px;background:#333;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
+            Click here to submit on Prolific
+          </a>
+        </div>
       </div>`,
-    choices: ["Finish"],
+    choices: ["Done"],
     data: { stage: "debrief" },
   });
 

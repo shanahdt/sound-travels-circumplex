@@ -35,7 +35,7 @@
       let normX = null, normY = null;
 
       const banner = trial.is_practice
-        ? `<div class="practice-banner">This is a practice trial. Your rating won't be saved \u2014 it's just to learn the controls.</div>`
+        ? `<div class="practice-banner">This is a practice trial. Your rating won't be included in any analysis \u2014 it's just to learn the controls.</div>`
         : "";
 
       const headerLeft = trial.is_practice

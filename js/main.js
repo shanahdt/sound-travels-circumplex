@@ -22,18 +22,18 @@
       display_element: expContainer,
       on_finish: () => {
         try { window.__jsPsychData = jsPsych.data.get().values(); } catch (e) {}
-        // Send to DataPipe regardless of how far the participant got.
-        try {
-          fetch("https://pipe.jspsych.org/api/data/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              experimentID: cfg.DATAPIPE_ID,
-              filename: `${participantId}.csv`,
-              data: jsPsych.data.get().csv(),
-            }),
-          });
-        } catch (e) { /* swallow — best effort */ }
+        // Fallback save for dropouts — jsPsychPipe trial handles completers.
+        fetch("https://pipe.jspsych.org/api/data/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "*/*" },
+          body: JSON.stringify({
+            experimentID: cfg.DATAPIPE_ID,
+            filename: `${participantId}.csv`,
+            data: jsPsych.data.get().csv(),
+          }),
+        })
+          .then(r => { if (!r.ok) console.warn("DataPipe save failed:", r.status, r.statusText); })
+          .catch(e => console.warn("DataPipe save error:", e));
       },
     });
     window.__jsPsych = jsPsych;
@@ -97,6 +97,13 @@
       ST.stages.phaseBreak(split.phase1.length + split.phase2.length, totalRated, "Phase 2 complete \u2014 the last set focuses on a single soundscape type."),
       ...split.phase3.map(buildRatingTrial),
       ST.stages.demographics(),
+      {
+        type: jsPsychPipe,
+        action: "save",
+        experiment_id: cfg.DATAPIPE_ID,
+        filename: `${participantId}.csv`,
+        data_string: () => jsPsych.data.get().csv(),
+      },
       ST.stages.debrief(),
     ];
 

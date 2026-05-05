@@ -19,7 +19,7 @@
     N_PHASE_3: 10,    // within-cluster (fine-grained)
 
     // DataPipe — get this ID from pipe.jspsych.org after creating an experiment
-    DATAPIPE_ID: "mwgs2",
+    DATAPIPE_ID: "PSAdtRIuNUQR",
 
     // UI
     PLOT_PIXELS: 500,

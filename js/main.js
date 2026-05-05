@@ -85,12 +85,6 @@
       data: { seed, manifest_version: manifest.version, stage: `phase_${clip.phase}` },
     });
 
-    const allRatingClips = [...split.phase1, ...split.phase2, ...split.phase3];
-    const audioUrls = [
-      cfg.BASE + split.practice.src,
-      ...allRatingClips.map(c => cfg.BASE + c.src),
-    ];
-
     const timeline = [
       ST.stages.consent(jsPsych),
       ST.stages.prolificId(jsPsych),
@@ -101,7 +95,6 @@
       ST.stages.culture(),
       ST.stages.musicBackground(),
       ST.stages.instructions(totalRated),
-      ST.stages.preload(audioUrls),
       ST.stages.practiceTrial(split.practice),
       ...split.phase1.map(buildRatingTrial),
       ST.stages.phaseBreak(split.phase1.length, totalRated, "Phase 1 complete \u2014 the next set keeps things varied."),

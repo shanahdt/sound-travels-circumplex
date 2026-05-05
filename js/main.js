@@ -8,24 +8,26 @@
   async function run() {
     const cfg = ST.config;
 
+    // Per-participant deterministic seed + unique ID for DataPipe filename.
+    // Defined early so on_finish can close over it.
+    const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+    const participantId = `p_${seed}`;
+
     const jsPsych = initJsPsych({
       on_finish: () => {
-        // Make data inspectable from the page for debugging / e2e tests.
         try { window.__jsPsychData = jsPsych.data.get().values(); } catch (e) {}
-        // Local fallback: offer a JSON download if no server captured the data.
-        // On cognition.run this still runs, but the participant has already had their
-        // data POSTed transparently by cognition.run's wrapper, so the download is just a bonus.
+        // Send to DataPipe regardless of how far the participant got.
         try {
-          const data = jsPsych.data.get().json();
-          const blob = new Blob([data], {type: "application/json"});
-          const url  = URL.createObjectURL(blob);
-          document.body.innerHTML = `
-            <div class="intro-wrap" style="text-align:center">
-              <h2>Thank you!</h2>
-              <p>Your responses have been recorded.</p>
-              <p><a href="${url}" download="circumplex-data.json">Download a copy of your data (JSON)</a></p>
-            </div>`;
-        } catch (e) { /* swallow */ }
+          fetch("https://pipe.jspsych.org/api/data/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              experimentID: cfg.DATAPIPE_ID,
+              filename: `${participantId}.csv`,
+              data: jsPsych.data.get().csv(),
+            }),
+          });
+        } catch (e) { /* swallow — best effort */ }
       },
     });
     window.__jsPsych = jsPsych;
@@ -48,10 +50,6 @@
       return;
     }
     loading.remove();
-
-    // Per-participant deterministic seed + unique ID for DataPipe filename.
-    const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
-    const participantId = `p_${seed}`;
     const rng  = ST.makeRNG(seed);
     const split = ST.buildTrialList(manifest, rng);
 
@@ -93,13 +91,6 @@
       ST.stages.phaseBreak(split.phase1.length + split.phase2.length, totalRated, "Phase 2 complete \u2014 the last set focuses on a single soundscape type."),
       ...split.phase3.map(buildRatingTrial),
       ST.stages.demographics(),
-      {
-        type: jsPsychPipe,
-        action: "save",
-        experiment_id: cfg.DATAPIPE_ID,
-        filename: `${participantId}.csv`,
-        data_string: () => jsPsych.data.get().csv(),
-      },
       ST.stages.debrief(),
     ];
 

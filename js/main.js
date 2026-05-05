@@ -36,9 +36,10 @@
       );
     }
 
+    let _saveCounter = 0;
     const jsPsych = initJsPsych({
       display_element: expContainer,
-      on_trial_finish: () => fetchSave(jsPsych.data.get().csv()),
+      on_trial_finish: () => { if (++_saveCounter % 3 === 0) fetchSave(jsPsych.data.get().csv()); },
       on_finish: () => {
         try { window.__jsPsychData = jsPsych.data.get().values(); } catch (e) {}
         fetchSave(jsPsych.data.get().csv());

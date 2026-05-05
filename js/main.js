@@ -18,8 +18,26 @@
     expContainer.id = 'exp-container';
     document.body.appendChild(expContainer);
 
+    // Throttled mid-experiment save: fires every 10 trials so dropout data isn't lost.
+    // Uses the same filename as the final save so each checkpoint overwrites the last.
+    let _trialsSinceLastSave = 0;
+    function periodicSave() {
+      _trialsSinceLastSave++;
+      if (_trialsSinceLastSave % 10 !== 0) return;
+      fetch("https://pipe.jspsych.org/api/data/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "*/*" },
+        body: JSON.stringify({
+          experimentID: cfg.DATAPIPE_ID,
+          filename: `${participantId}.csv`,
+          data: jsPsych.data.get().csv(),
+        }),
+      }).catch(() => {}); // silent — never interrupt the experiment
+    }
+
     const jsPsych = initJsPsych({
       display_element: expContainer,
+      on_trial_finish: periodicSave,
       on_finish: () => {
         try { window.__jsPsychData = jsPsych.data.get().values(); } catch (e) {}
         // Fallback save for dropouts — jsPsychPipe trial handles completers.

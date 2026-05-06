@@ -81,11 +81,12 @@
       if (sorted.length) phase3 = shuffle(sorted[0][1], rng).slice(0, N3);
     }
 
+    const p1len = phase1.length, p2len = phase2.length;
     return {
       practice: { ...practice, phase: 0, phase_idx: 0, is_practice: true },
       phase1: phase1.map((c, i) => ({...c, phase: 1, phase_idx: i + 1, is_practice: false})),
-      phase2: phase2.map((c, i) => ({...c, phase: 2, phase_idx: N1 + i + 1, is_practice: false})),
-      phase3: phase3.map((c, i) => ({...c, phase: 3, phase_idx: N1 + N2 + i + 1, is_practice: false})),
+      phase2: phase2.map((c, i) => ({...c, phase: 2, phase_idx: p1len + i + 1, is_practice: false})),
+      phase3: phase3.map((c, i) => ({...c, phase: 3, phase_idx: p1len + p2len + i + 1, is_practice: false})),
     };
   }
 

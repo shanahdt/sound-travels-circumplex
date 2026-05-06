@@ -33,6 +33,7 @@
       display_element: expContainer,
       on_finish: () => {
         try { window.__jsPsychData = jsPsych.data.get().values(); } catch (e) {}
+        beaconSave();
       },
     });
     window.__jsPsych = jsPsych;
@@ -93,13 +94,6 @@
       ST.stages.phaseBreak(split.phase1.length + split.phase2.length, totalRated, "Phase 2 complete \u2014 the last set focuses on a single soundscape type."),
       ...split.phase3.map(buildRatingTrial),
       ST.stages.demographics(),
-      {
-        type: jsPsychPipe,
-        action: "save",
-        experiment_id: cfg.DATAPIPE_ID,
-        filename: `${participantId}.csv`,
-        data_string: () => jsPsych.data.get().csv(),
-      },
       ST.stages.debrief(),
     ];
 

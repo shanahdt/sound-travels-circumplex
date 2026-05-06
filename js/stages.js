@@ -183,7 +183,7 @@
         <p style="font-size:14px;color:#555">Last step. Everything is optional except where marked.</p>
       </div>`,
     html: `
-      <form class="demo-form">
+      <div class="demo-form">
 
         <div>
           <label for="age">Age <span class="field-help">(years, optional)</span></label>
@@ -252,7 +252,7 @@
           </div>
         </div>
 
-      </form>
+      </div>
     `,
     button_label: "Submit and finish",
     data: { stage: "demographics" },
@@ -272,7 +272,7 @@
       </div>`,
     choices: ["Submit to Prolific"],
     on_finish: () => {
-      window.location.href = "https://app.prolific.com/submissions/complete?cc=C7KCJNT1";
+      window.location.replace("https://app.prolific.com/submissions/complete?cc=C7KCJNT1");
     },
     data: { stage: "debrief" },
   });

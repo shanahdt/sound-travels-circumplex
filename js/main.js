@@ -21,34 +21,25 @@
     function pipePayload(data) {
       return JSON.stringify({ experimentID: cfg.DATAPIPE_ID, filename: `${participantId}.csv`, data });
     }
-    function fetchSave(data) {
-      fetch("https://pipe.jspsych.org/api/data/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "*/*" },
-        body: pipePayload(data),
-      }).catch(() => {});
-    }
     // sendBeacon is the only reliable way to save on tab/window close.
-    function beaconSave(data) {
+    function beaconSave() {
       navigator.sendBeacon(
         "https://pipe.jspsych.org/api/data/",
-        new Blob([pipePayload(data)], { type: "application/json" })
+        new Blob([pipePayload(jsPsych.data.get().csv())], { type: "application/json" })
       );
     }
 
-    let _saveCounter = 0;
     const jsPsych = initJsPsych({
       display_element: expContainer,
-      on_trial_finish: () => { if (++_saveCounter % 3 === 0) fetchSave(jsPsych.data.get().csv()); },
       on_finish: () => {
         try { window.__jsPsychData = jsPsych.data.get().values(); } catch (e) {}
-        fetchSave(jsPsych.data.get().csv());
       },
     });
     window.__jsPsych = jsPsych;
 
-    // Save on tab close / navigation away — sendBeacon survives page unload.
-    window.addEventListener("beforeunload", () => beaconSave(jsPsych.data.get().csv()));
+    // Save on tab close / navigation away — fires for dropouts.
+    // Completers are handled by the jsPsychPipe trial in the timeline.
+    window.addEventListener("beforeunload", beaconSave);
 
     const loading = document.createElement("div");
     loading.className = "intro-wrap";

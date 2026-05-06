@@ -21,12 +21,17 @@
     function pipePayload(data) {
       return JSON.stringify({ experimentID: cfg.DATAPIPE_ID, filename: `${participantId}.csv`, data });
     }
-    // sendBeacon is the only reliable way to save on tab/window close.
+    // keepalive:true tells the browser to complete the request even after navigation/close.
+    // This is more reliable than sendBeacon for JSON payloads.
     function beaconSave() {
-      navigator.sendBeacon(
-        "https://pipe.jspsych.org/api/data/",
-        new Blob([pipePayload(jsPsych.data.get().csv())], { type: "application/json" })
-      );
+      try {
+        fetch("https://pipe.jspsych.org/api/data/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "*/*" },
+          body: pipePayload(jsPsych.data.get().csv()),
+          keepalive: true,
+        }).catch(() => {});
+      } catch (e) {}
     }
 
     const jsPsych = initJsPsych({

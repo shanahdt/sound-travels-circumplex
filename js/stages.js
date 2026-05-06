@@ -272,6 +272,8 @@
       </div>`,
     choices: ["Submit to Prolific"],
     on_finish: () => {
+      // Save data first, then redirect — beacon survives the page unload.
+      if (window.__beaconSave) window.__beaconSave();
       window.location.replace("https://app.prolific.com/submissions/complete?cc=C7KCJNT1");
     },
     data: { stage: "debrief" },

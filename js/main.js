@@ -37,9 +37,10 @@
       },
     });
     window.__jsPsych = jsPsych;
+    window.__beaconSave = beaconSave;
 
-    // Save on tab close / navigation away — fires for dropouts.
-    // Completers are handled by the jsPsychPipe trial in the timeline.
+    // Save on tab close / navigation away — fires for dropouts and as a
+    // backstop for completers in case the debrief beacon fires late.
     window.addEventListener("beforeunload", beaconSave);
 
     const loading = document.createElement("div");

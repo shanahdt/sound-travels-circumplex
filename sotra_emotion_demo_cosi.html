@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soundscape — Perceptual Placement Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --ink:#0f0e0c;--paper:#f4f1ea;--paper2:#ede9df;--paper3:#e4dfd3;
+  --ghost:rgba(15,14,12,0.06);--ghost2:rgba(15,14,12,0.14);--ghost3:rgba(15,14,12,0.4);
+  --accent:#c45c2a;--blue:#2a6b8a;--green:#2a6b4a;--r:3px;
+  --mono:'DM Mono',monospace;--serif:'Libre Baskerville',Georgia,serif;
+}
+body{font-family:var(--mono);background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden;}
+.stage{display:none;min-height:100vh;flex-direction:column;}
+.stage.active{display:flex;}
+#stage-intro{justify-content:center;align-items:center;text-align:center;padding:3rem 2rem;}
+.intro-title{font-family:var(--serif);font-size:clamp(24px,4vw,42px);line-height:1.2;max-width:520px;margin:0 auto 1rem;}
+.intro-title em{font-style:italic;color:var(--accent);}
+.intro-body{font-size:13px;line-height:1.7;color:var(--ghost3);max-width:440px;margin:0 auto 2rem;}
+.folder-drop{border:1.5px dashed var(--ghost2);padding:2.5rem 2rem;max-width:420px;width:100%;cursor:pointer;transition:background .15s;margin:0 auto .75rem;}
+.folder-drop.over,.folder-drop:hover{background:var(--ghost);}
+.folder-drop .icon{font-size:32px;margin-bottom:.5rem;opacity:.5;}
+.folder-drop .title{font-size:13px;font-weight:500;margin-bottom:.25rem;}
+.folder-drop .sub{font-size:11px;color:var(--ghost3);line-height:1.6;}
+.status-line{font-size:11px;min-height:18px;margin-bottom:.75rem;}
+.hdr{padding:1rem 1.5rem .75rem;border-bottom:1px solid var(--ghost2);display:flex;align-items:baseline;gap:1.5rem;flex-shrink:0;}
+.hdr-title{font-family:var(--serif);font-style:italic;font-size:14px;}
+.hdr-stage{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--ghost3);}
+.hdr-right{margin-left:auto;}
+.btn{background:var(--ink);color:var(--paper);border:none;padding:.65rem 2rem;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
+.btn:hover{opacity:.8;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-o{background:transparent;color:var(--ink);border:1px solid var(--ghost2);padding:.4rem 1rem;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
+.btn-o:hover{background:var(--ghost);}
+.pill{font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border:1px solid var(--ghost2);border-radius:20px;color:var(--ghost3);cursor:pointer;background:transparent;font-family:var(--mono);}
+.pill:hover{background:var(--ghost);color:var(--ink);}
+#stage-listen .body{display:flex;flex:1;overflow:hidden;}
+.left-panel{width:300px;flex-shrink:0;border-right:1px solid var(--ghost2);display:flex;flex-direction:column;padding:1.25rem;}
+.right-panel{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;}
+.sec-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--ghost3);margin-bottom:.5rem;}
+.clip-list{flex:1;overflow-y:auto;margin:.5rem 0;}
+.clip-item{display:flex;align-items:center;gap:.5rem;padding:.5rem .6rem;cursor:pointer;border-radius:var(--r);border:1px solid transparent;}
+.clip-item:hover{background:var(--ghost);}
+.clip-item.active{background:var(--paper3);border-color:var(--ghost2);}
+.clip-num{font-size:10px;color:var(--ghost3);width:16px;flex-shrink:0;}
+.clip-name-wrap{font-size:11px;flex:1;line-height:1.4;}
+.clip-check{width:14px;height:14px;border-radius:50%;border:1px solid var(--ghost2);flex-shrink:0;font-size:8px;display:flex;align-items:center;justify-content:center;}
+.clip-check.done{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+.divider{height:1px;background:var(--ghost2);margin:.75rem 0;}
+.note{font-size:10px;color:var(--ghost3);line-height:1.5;}
+.player{background:var(--paper2);border:1px solid var(--ghost2);padding:.85rem 1rem;margin-bottom:.5rem;}
+.player-name{font-size:10px;color:var(--ghost3);margin-bottom:.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.player-row{display:flex;align-items:center;gap:.6rem;}
+.play-btn{width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--paper);border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.play-btn:disabled{opacity:.4;cursor:not-allowed;}
+.prog-wrap{flex:1;cursor:pointer;}
+.prog-track{height:3px;background:var(--ghost2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--ink);border-radius:2px;width:0%;}
+.time-lbl{font-size:9px;color:var(--ghost3);margin-top:2px;}
+.cx-label{font-size:11px;color:var(--ghost3);margin-bottom:.5rem;text-align:center;}
+.cx-wrap{position:relative;width:100%;max-width:400px;}
+.cx-canvas{width:100%;aspect-ratio:1;display:block;cursor:crosshair;touch-action:none;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.cx-axes-h{display:flex;justify-content:space-between;font-size:9px;color:var(--ghost3);text-transform:uppercase;margin-top:3px;}
+.cx-row{margin-top:.75rem;display:flex;gap:.5rem;align-items:center;width:100%;max-width:400px;}
+.cx-coords{font-size:11px;color:var(--ghost3);flex:1;}
+#stage-reveal .body{flex:1;overflow-y:auto;padding:1.5rem;}
+.reveal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;max-width:780px;margin-bottom:1.5rem;}
+.rev-card{background:var(--paper2);border:1px solid var(--ghost2);padding:1rem;}
+.rev-lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ghost3);margin-bottom:.6rem;}
+.rev-canvas{width:100%;aspect-ratio:1;display:block;border:1px solid var(--ghost2);}
+.rev-stats{font-size:11px;line-height:1.7;color:var(--ghost3);margin-top:.5rem;}
+.rev-stats strong{color:var(--ink);}
+#stage-upload .body{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+.up-panel{padding:1.5rem;display:flex;flex-direction:column;overflow-y:auto;}
+.up-panel+.up-panel{border-left:1px solid var(--ghost2);}
+.up-drop{border:1px dashed var(--ghost2);width:100%;padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:background .15s;margin-bottom:.75rem;}
+.up-drop.over,.up-drop:hover{background:var(--ghost);}
+.feat-row{display:grid;grid-template-columns:1fr 90px;padding:3px 0;border-bottom:1px solid var(--ghost);font-size:11px;}
+.feat-name{color:var(--ghost3);}
+.feat-val{text-align:right;font-weight:500;}
+.lt-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;margin-bottom:.6rem;}
+.lt-btn{padding:.45rem .6rem;border:1px solid var(--ghost2);background:transparent;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;text-align:left;line-height:1.4;}
+.lt-btn:hover{background:var(--ghost);}
+.lt-btn.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.lt-sub{display:block;opacity:.6;font-size:9px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.75rem;}
+.stat-box{background:var(--paper2);border:1px solid var(--ghost2);padding:.6rem .75rem;}
+.stat-val{font-size:18px;font-weight:500;}
+.stat-lbl{font-size:9px;color:var(--ghost3);letter-spacing:.07em;text-transform:uppercase;}
+.lt-wrap{position:relative;}
+@media(max-width:680px){
+  #stage-listen .body{flex-direction:column;}
+  .left-panel{width:100%;border-right:none;border-bottom:1px solid var(--ghost2);}
+  #stage-upload .body{grid-template-columns:1fr;}
+  .up-panel+.up-panel{border-left:none;border-top:1px solid var(--ghost2);}
+}
+</style>
+</head>
+<body>
+
+<div id="stage-intro" class="stage active">
+  <p style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ghost3);margin-bottom:1.25rem;">Soundscape Perception Study</p>
+  <h1 class="intro-title">Where does a sound <em>live</em> in emotional space?</h1>
+  <p class="intro-body">First, drop your audio folder so the demo can find the four study clips. Then listen and place each one on the arousal–valence circumplex, and see how your ratings compare to the study cohort and the acoustic model.</p>
+  <div class="folder-drop" id="introDrop">
+    <div class="icon">◎</div>
+    <div class="title">Drop your audio folder here</div>
+    <div class="sub">Drag your soundscape recordings folder onto this box.<br>The demo will scan it and find the four clips automatically.<br><span style="font-size:9px;opacity:.6;">Or click to select files manually.</span></div>
+    <input type="file" id="introInput" multiple accept="audio/*" style="display:none;" onchange="handleFileInput(this.files)">
+  </div>
+  <div class="status-line" id="introStatus"></div>
+  <button class="btn" id="introBtn" onclick="proceedToListen()" disabled>Begin listening →</button>
+  <p class="note" style="margin-top:.75rem;">Audio stays in your browser — nothing is sent to any server.</p>
+</div>
+
+<div id="stage-listen" class="stage">
+  <div class="hdr">
+    <span class="hdr-title">Soundscape Placement</span>
+    <span class="hdr-stage">Stage 01 — Listen &amp; Place</span>
+  </div>
+  <div class="body">
+    <div class="left-panel">
+      <div class="sec-label">Clips</div>
+      <p class="note">Select a clip, listen, then click or drag to place it.</p>
+      <div class="clip-list" id="clipList"></div>
+      <div class="divider"></div>
+      <div class="player">
+        <div class="player-name" id="playerName">— select a clip —</div>
+        <div class="player-row">
+          <button class="play-btn" id="playBtn" onclick="togglePlay()" disabled>▶</button>
+          <div class="prog-wrap" id="progWrap">
+            <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+            <div class="time-lbl" id="timeLbl">0:00 / 0:00</div>
+          </div>
+        </div>
+      </div>
+      <p class="note" id="ratedCount">0 / 4 placed</p>
+    </div>
+    <div class="right-panel">
+      <div class="cx-label" id="cxLabel">Select a clip, then click or drag to place it</div>
+      <div class="cx-wrap">
+        <canvas id="cxCanvas" class="cx-canvas"></canvas>
+        <div class="cx-axes-h"><span>← unpleasant</span><span>pleasant →</span></div>
+      </div>
+      <div class="cx-row">
+        <div class="cx-coords" id="cxCoords">—</div>
+        <button class="btn-o" id="clearBtn" onclick="clearRating()" style="display:none;">clear</button>
+        <button class="btn" id="submitBtn" onclick="submitRating()" disabled>Confirm →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="stage-reveal" class="stage">
+  <div class="hdr">
+    <span class="hdr-title">Soundscape Placement</span>
+    <span class="hdr-stage">Stage 01 — Results</span>
+    <div class="hdr-right"><button class="pill" onclick="goTo('stage-listen')">← Re-rate</button></div>
+  </div>
+  <div class="body">
+    <div class="reveal-grid" id="revealGrid"></div>
+    <button class="btn" onclick="goTo('stage-upload');requestAnimationFrame(initUploadCanvas);">Continue to Upload Demo →</button>
+  </div>
+</div>
+
+<div id="stage-upload" class="stage">
+  <div class="hdr">
+    <span class="hdr-title">Soundscape Placement</span>
+    <span class="hdr-stage">Stage 02 — Upload &amp; Predict</span>
+    <div class="hdr-right"><button class="pill" onclick="goTo('stage-reveal')">← Results</button></div>
+  </div>
+  <div class="body">
+    <div class="up-panel">
+      <div class="sec-label">Audio Input</div>
+      <div class="up-drop" id="upDrop" onclick="document.getElementById('upInput').click()">
+        <div style="font-size:20px;opacity:.4;margin-bottom:.3rem;">◎</div>
+        <div style="font-size:12px;font-weight:500;margin-bottom:.2rem;">Drop any audio file here</div>
+        <div style="font-size:11px;color:var(--ghost3);">or click to browse · .wav · .mp3 · .flac</div>
+        <input type="file" id="upInput" accept="audio/*" style="display:none;" onchange="loadUpFile(this.files[0])">
+      </div>
+      <div id="upPlayerWrap" style="display:none;width:100%;">
+        <div class="player">
+          <div class="player-name" id="upPlayerName">—</div>
+          <div class="player-row">
+            <button class="play-btn" id="upPlayBtn" onclick="toggleUpload()">▶</button>
+            <div class="prog-wrap" id="upProgWrap">
+              <div class="prog-track"><div class="prog-fill" id="upFill"></div></div>
+              <div class="time-lbl" id="upTimeLbl">0:00 / 0:00</div>
+            </div>
+          </div>
+        </div>
+        <p class="note" id="procMsg" style="display:none;">◌ Extracting features…</p>
+      </div>
+      <div id="featPanel" style="display:none;width:100%;">
+        <div class="sec-label" style="margin-top:.75rem;">Extracted features</div>
+        <div id="featGrid"></div>
+      </div>
+      <div id="ltPanel" style="display:none;width:100%;margin-top:1rem;">
+        <div class="sec-label">Listener type</div>
+        <p class="note" style="margin-bottom:.6rem;">Adjusts the predicted placement based on systematic rating differences observed in the experiment. Hover a type for details.</p>
+        <div class="lt-grid">
+          <button class="lt-btn on" onclick="setLT('mean',this)" onmouseenter="showTip('mean')" onmouseleave="hideTip()">Mean listener<span class="lt-sub">Population avg</span></button>
+          <button class="lt-btn" onclick="setLT('sensitive',this)" onmouseenter="showTip('sensitive')" onmouseleave="hideTip()">Sound-sensitive<span class="lt-sub">Limits daily life</span></button>
+          <button class="lt-btn" onclick="setLT('musician',this)" onmouseenter="showTip('musician')" onmouseleave="hideTip()">Trained musician<span class="lt-sub">6+ yrs formal</span></button>
+          <button class="lt-btn" onclick="setLT('daily',this)" onmouseenter="showTip('daily')" onmouseleave="hideTip()">Daily exposure<span class="lt-sub">Frequent listener</span></button>
+        </div>
+        <div id="ltTip" style="display:none;margin-top:.5rem;background:var(--paper3);border:1px solid var(--ghost2);padding:.65rem .85rem;font-size:11px;line-height:1.65;color:var(--ink);border-radius:var(--r);"></div>
+        <p class="note" style="margin-top:.5rem;">Offsets derived from experiment data — directional, not prescriptive.</p>
+      </div>
+    </div>
+    <div class="up-panel">
+      <div class="sec-label">Predicted Placement</div>
+      <div id="upNoFile" style="color:var(--ghost3);font-size:12px;padding:2rem 0;line-height:1.8;">Upload an audio file<br>to see its predicted placement</div>
+      <div id="upResult" style="display:none;width:100%;">
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:.5rem;font-size:10px;color:var(--ghost3);">
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);vertical-align:middle;margin-right:3px;"></span>Predicted</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);vertical-align:middle;margin-right:3px;"></span>Listener-adjusted</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2a6b8a33;border:1px solid #2a6b8a;vertical-align:middle;margin-right:3px;"></span>Your Stage 1 ratings</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(15,14,12,0.12);border:1px solid rgba(15,14,12,0.3);vertical-align:middle;margin-right:3px;"></span>Demo clip cohort means (A–D)</span>
+        </div>
+        <p style="font-size:10px;color:var(--ghost3);margin-bottom:.5rem;">Note: browser audio analysis approximates librosa — predictions are directional, not exact.</p>
+        <canvas id="upCanvas" class="cx-canvas" style="cursor:default;"></canvas>
+        <div class="cx-axes-h"><span>← unpleasant</span><span>pleasant →</span></div>
+        <div class="stat-grid" id="statGrid"></div>
+        <div id="driverPanel" style="margin-top:.75rem;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<audio id="audioEl"></audio>
+<audio id="upAudioEl"></audio>
+
+<script>
+// ═══ MODEL ═══════════════════════════════════════════════════════════════════
+const MODEL={features:["duration_s","rms_mean","rms_std","rms_max","rms_dynamic_range","spectral_centroid_mean","spectral_centroid_std","spectral_bandwidth_mean","spectral_bandwidth_std","spectral_rolloff_mean","spectral_rolloff_std","spectral_flatness_mean","spectral_flatness_std","spectral_contrast_band0_mean","spectral_contrast_band1_mean","spectral_contrast_band2_mean","spectral_contrast_band3_mean","spectral_contrast_band4_mean","spectral_contrast_band5_mean","spectral_contrast_band6_mean","zcr_mean","zcr_std","tempo_bpm","beat_count","beat_density","onset_strength_mean","onset_strength_std","onset_strength_max","mfcc1_mean","mfcc1_std","mfcc2_mean","mfcc2_std","mfcc3_mean","mfcc3_std","mfcc4_mean","mfcc4_std","mfcc5_mean","mfcc5_std","mfcc6_mean","mfcc6_std","mfcc7_mean","mfcc7_std","mfcc8_mean","mfcc8_std","mfcc9_mean","mfcc9_std","mfcc10_mean","mfcc10_std","mfcc11_mean","mfcc11_std","mfcc12_mean","mfcc12_std","mfcc13_mean","mfcc13_std","chroma_mean","chroma_std","chroma_C_mean","chroma_Cs_mean","chroma_D_mean","chroma_Ds_mean","chroma_E_mean","chroma_F_mean","chroma_Fs_mean","chroma_G_mean","chroma_Gs_mean","chroma_A_mean","chroma_As_mean","chroma_B_mean","tonnetz1_mean","tonnetz2_mean","tonnetz3_mean","tonnetz4_mean","tonnetz5_mean","tonnetz6_mean","roughness_proxy","energy_sub_bass","energy_sub_bass_rel","energy_bass","energy_bass_rel","energy_low_mid","energy_low_mid_rel","energy_mid","energy_mid_rel","energy_high_mid","energy_high_mid_rel","energy_presence","energy_presence_rel","energy_brilliance","energy_brilliance_rel"],coef_v:[0.000617,-0.003321,0.009492,0.01651,0.009277,0.0121,0.001303,-0.016726,0.034303,-0.005219,-0.004169,0.005404,0.037963,0.005454,0.007197,-0.016299,-0.044989,0.028659,-0.022455,-0.002138,0.018297,0.00676,-0.007594,-0.002666,-0.002815,-0.002555,0.008087,0.011959,-0.016066,-0.029163,-3.8e-5,-0.013662,0.031569,-0.026808,0.021891,0.006124,-0.025256,0.014932,-0.043972,0.012483,0.00536,-0.011695,0.009138,-0.004674,-0.022066,-0.013258,-0.035753,-0.011449,0.010679,0.008002,0.001394,0.009347,-0.004852,-0.007813,0.007036,0.032715,0.006076,0.014473,0.000393,0.002135,0.020129,-0.009562,-0.026735,0.006655,0.028355,0.015442,0.008743,-0.00013,0.031427,0.018242,0.01029,0.002059,-0.00067,0.028233,0.01823,0.009253,0.014847,0.010487,0.011175,-0.020215,0.001097,0.004461,-0.01869,-0.020211,0.012153,0.018449,0.012725,-0.008579,-0.01211],coef_a:[0.005355,0.011436,0.005479,-0.008053,-0.002306,-0.002211,-0.00284,-0.001601,-0.00951,0.00031,-0.010249,-0.001697,-0.00749,-0.012163,0.001615,0.010328,0.007839,0.006311,0.007081,-0.002905,-0.004697,-0.002734,0.011023,-0.002375,-0.003137,-0.007225,-0.007308,0.001855,0.011623,0.016345,-0.004054,0.009829,-0.021835,0.010466,-0.012146,-0.010997,-0.004293,-0.007466,0.013738,-0.005287,-0.00077,0.007106,0.005181,-0.006637,-0.003975,-0.001324,0.006744,0.003001,0.002517,-0.010825,0.010435,0.00486,-0.000785,0.008208,-0.001551,-0.008999,0.000958,-0.005328,0.000835,-0.003756,0.001908,0.00248,-0.001984,-0.005275,-0.001388,-0.010043,-0.003761,0.009387,0.015738,-0.001524,-0.001503,-0.000246,0.000699,-0.002001,-0.004177,-0.006528,-0.003012,0.005651,-0.006619,0.001151,-0.012825,0.007491,0.012119,0.017178,0.004486,0.001996,-0.004663,0.004218,-0.006653],int_v:-0.096452,int_a:0.125927,mean:[11.9559,0.1126,0.0466,0.2765,0.2327,2809.0388,396.89,2347.4126,235.9196,5400.6902,842.4843,0.0184,0.0099,19.3697,11.6917,14.7872,15.7147,17.2116,16.6245,52.4678,0.1791,0.0438,117.6534,22.4217,1.8721,0.9719,0.366,3.705,-93.3555,28.3693,73.3104,15.4424,-37.096,13.5111,4.8042,10.7324,-19.9663,9.7245,3.2865,9.012,-17.2895,8.0701,8.9384,7.358,-13.178,7.1163,8.0048,7.3748,-13.3849,6.9405,8.6473,6.9026,-12.1359,6.6338,0.4415,0.2793,0.4559,0.4629,0.457,0.4454,0.4441,0.4393,0.4222,0.4106,0.4204,0.4404,0.4466,0.4536,-0.0117,-0.0069,-0.0179,-0.011,0.0017,-0.0041,0.1746,42444.8425,0.0065,711160.0336,0.089,880160.3309,0.1135,3555122.3876,0.5193,903942.4247,0.168,255305.4855,0.0643,158853.2206,0.0394],std:[0.6944,0.0273,0.0203,0.0862,0.0966,764.782,226.2091,277.3372,119.0291,1148.1484,405.8585,0.0167,0.0077,3.1186,1.4585,1.6496,2.1807,1.798,1.4915,2.554,0.0869,0.0293,23.4914,5.3213,0.4324,0.0901,0.1708,1.6099,61.5831,15.5458,38.6377,8.4402,33.1137,6.1311,13.8432,4.5074,8.2898,4.7311,9.1305,3.7579,6.4613,3.2507,6.0312,2.6423,5.3514,2.6982,6.8925,3.1031,4.3821,2.6689,4.4857,2.6209,3.672,2.42,0.1087,0.0373,0.1416,0.1276,0.1359,0.1194,0.1166,0.111,0.1101,0.1226,0.1277,0.1403,0.1405,0.1427,0.0359,0.024,0.0342,0.0371,0.0137,0.0123,0.0807,151054.3215,0.0241,1413419.5653,0.1604,1312492.8531,0.1454,2270952.1282,0.2787,808959.1,0.1776,386920.9255,0.1361,200796.5264,0.0817]};
+
+function predict(vec){
+  let pv=MODEL.int_v,pa=MODEL.int_a;
+  for(let i=0;i<vec.length;i++){
+    // clamp z-scores to ±3 to guard against browser DSP vs librosa scale differences
+    const z=Math.max(-3,Math.min(3,(vec[i]-MODEL.mean[i])/(MODEL.std[i]||1e-8)));
+    pv+=z*MODEL.coef_v[i];pa+=z*MODEL.coef_a[i];
+  }
+  return{v:Math.max(-1,Math.min(1,pv)),a:Math.max(-1,Math.min(1,pa))};
+}
+const LT={mean:{dv:0,da:0},sensitive:{dv:-.15,da:.08},musician:{dv:.12,da:-.10},daily:{dv:-.08,da:.05}};
+
+// ═══ STUDY DATA ══════════════════════════════════════════════════════════════
+const CLIPS=[
+  {id:'c6_20231004_180000',cluster:6,mv:-.558,ma:.235,label:'Clip A'},
+  {id:'c2_20231009_185900',cluster:2,mv:-.043,ma:-.110,label:'Clip B'},
+  {id:'c3_20231002_155100',cluster:3,mv:-.452,ma:.299,label:'Clip C'},
+  {id:'c5_20230611_104200T',cluster:5,mv:.259,ma:-.068,label:'Clip D'},
+];
+const SPT=[{v:.668,a:.31,c:0},{v:-.431,a:.37,c:0},{v:.604,a:-.727,c:0},{v:.498,a:-.412,c:0},{v:-.097,a:.225,c:1},{v:.378,a:-.194,c:2},{v:.501,a:.127,c:2},{v:-.324,a:.724,c:2},{v:-.827,a:.289,c:2},{v:-.562,a:.5,c:3},{v:-.761,a:.399,c:3},{v:.259,a:-.068,c:5},{v:-.558,a:.001,c:6},{v:-.09,a:.425,c:6},{v:-.37,a:.544,c:6}];
+const CC={0:'#888',1:'#c45c2a',2:'#2a6b8a',3:'#8a6b2a',5:'#6b2a8a',6:'#2a8a6b'};
+const AUDIO_EXTS=new Set(['.wav','.mp3','.flac','.ogg','.m4a','.aac','.opus']);
+
+// ═══ STATE ═══════════════════════════════════════════════════════════════════
+const audioFiles={};
+let curClip=null,userRatings={},dragging=false,curRating=null;
+let ltType='mean',uploadFeats=null,basePred=null;
+let playing=false,upPlaying=false;
+
+// ═══ FILE LOADING ════════════════════════════════════════════════════════════
+function regFile(file){
+  const dot=file.name.lastIndexOf('.');
+  if(dot<0||!AUDIO_EXTS.has(file.name.slice(dot).toLowerCase()))return;
+  const name=file.name.slice(0,dot);
+  const url=URL.createObjectURL(file);
+  audioFiles[name]=url;
+  audioFiles[name.toLowerCase()]=url;
+}
+function resolveAudio(id){return audioFiles[id]||audioFiles[id.toLowerCase()]||null;}
+
+function afterLoad(){
+  CLIPS.forEach(c=>{if(!audioFiles[c.id])audioFiles[c.id]=audioFiles[c.id.toLowerCase()]||null;});
+  const n=CLIPS.filter(c=>resolveAudio(c.id)).length;
+  const total=new Set(Object.values(audioFiles).filter(Boolean)).size;
+  const st=document.getElementById('introStatus');
+  if(st){
+    st.textContent=`${total} audio files found · ${n} / ${CLIPS.length} demo clips matched`;
+    st.style.color=n===CLIPS.length?'var(--green)':n>0?'var(--accent)':'var(--ghost3)';
+  }
+  const btn=document.getElementById('introBtn');
+  if(btn)btn.disabled=(n===0);
+}
+
+function traverseEntry(entry,done){
+  if(entry.isFile){entry.file(f=>{regFile(f);done();});}
+  else if(entry.isDirectory){
+    const rdr=entry.createReader();
+    const readAll=()=>rdr.readEntries(batch=>{
+      if(!batch.length){done();return;}
+      let p=batch.length;const d=()=>{if(--p===0)readAll();};
+      batch.forEach(e=>traverseEntry(e,d));
+    });
+    readAll();
+  } else done();
+}
+
+function handleFileInput(files){Array.from(files).forEach(regFile);afterLoad();}
+
+// Intro drop zone
+const introDrop=document.getElementById('introDrop');
+introDrop.addEventListener('dragover',e=>{e.preventDefault();introDrop.classList.add('over');});
+introDrop.addEventListener('dragleave',()=>introDrop.classList.remove('over'));
+introDrop.addEventListener('drop',e=>{
+  e.preventDefault();introDrop.classList.remove('over');
+  const items=[...e.dataTransfer.items].filter(i=>i.kind==='file');
+  if(!items.length)return;
+  document.getElementById('introStatus').textContent='Scanning…';
+  let p=items.length;const done=()=>{if(--p===0)afterLoad();};
+  items.forEach(item=>{
+    const entry=item.webkitGetAsEntry?.();
+    if(entry)traverseEntry(entry,done);else{regFile(item.getAsFile());done();}
+  });
+});
+introDrop.addEventListener('click',()=>document.getElementById('introInput').click());
+
+// ═══ NAV ═════════════════════════════════════════════════════════════════════
+function goTo(id){
+  document.querySelectorAll('.stage').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='stage-reveal')buildReveal();
+}
+function proceedToListen(){
+  goTo('stage-listen');
+  buildClipList();
+  requestAnimationFrame(()=>{initCx();selectClip(0);});
+}
+
+// ═══ CLIP LIST ═══════════════════════════════════════════════════════════════
+function buildClipList(){
+  const act=curClip??0;
+  document.getElementById('clipList').innerHTML=CLIPS.map((c,i)=>{
+    const has=!!resolveAudio(c.id),rated=!!userRatings[c.id];
+    return`<div class="clip-item${i===act?' active':''}" onclick="selectClip(${i})">
+      <span class="clip-num">${i+1}</span>
+      <span class="clip-name-wrap" style="opacity:${has?1:.5}">${c.label}<br><span style="font-size:9px;opacity:.6;">${c.id.replace(/^c\d+_/,'')}</span></span>
+      <span class="clip-check${rated?' done':''}">${rated?'✓':''}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectClip(i){
+  if(playing){document.getElementById('audioEl').pause();playing=false;document.getElementById('playBtn').textContent='▶';}
+  curClip=i;buildClipList();
+  const c=CLIPS[i],url=resolveAudio(c.id),a=document.getElementById('audioEl');
+  if(url){a.src=url;a.load();}else a.removeAttribute('src');
+  document.getElementById('playBtn').disabled=!url;
+  document.getElementById('playerName').textContent=url?`${c.label} · ${c.id}`:`${c.label} · no audio loaded`;
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('timeLbl').textContent='0:00 / 0:00';
+  curRating=userRatings[c.id]||null;
+  drawCx();updateUI();
+  document.getElementById('cxLabel').textContent=curRating?`${c.label} — drag to adjust`:`Place ${c.label} on the circumplex`;
+}
+
+// ═══ AUDIO A ═════════════════════════════════════════════════════════════════
+const audioEl=document.getElementById('audioEl');
+function togglePlay(){
+  if(!audioEl.hasAttribute('src'))return;
+  if(playing){audioEl.pause();document.getElementById('playBtn').textContent='▶';playing=false;}
+  else audioEl.play().then(()=>{document.getElementById('playBtn').textContent='■';playing=true;}).catch(console.warn);
+}
+audioEl.addEventListener('timeupdate',()=>{
+  if(!audioEl.duration)return;
+  document.getElementById('progFill').style.width=(audioEl.currentTime/audioEl.duration*100)+'%';
+  document.getElementById('timeLbl').textContent=fmt(audioEl.currentTime)+' / '+fmt(audioEl.duration);
+});
+audioEl.addEventListener('ended',()=>{document.getElementById('playBtn').textContent='▶';playing=false;});
+document.getElementById('progWrap').addEventListener('click',e=>{
+  if(!audioEl.duration)return;
+  const r=e.currentTarget.getBoundingClientRect();audioEl.currentTime=(e.clientX-r.left)/r.width*audioEl.duration;
+});
+
+// ═══ CIRCUMPLEX ══════════════════════════════════════════════════════════════
+let cxCanvas,cxCtx,cxW,cxH;
+
+function toXY(v,a,w,h){return{x:(v+1)/2*w,y:(1-(a+1)/2)*h};}
+function toVA(x,y,w,h){return{v:Math.max(-1,Math.min(1,x/w*2-1)),a:Math.max(-1,Math.min(1,-(y/h*2-1)))};}
+function evToVA(e,cv){
+  const r=cv.getBoundingClientRect();
+  const sx=cxW/r.width,sy=cxH/r.height;
+  const cx2=Math.max(r.left,Math.min(r.right,e.clientX));
+  const cy2=Math.max(r.top,Math.min(r.bottom,e.clientY));
+  return toVA((cx2-r.left)*sx,(cy2-r.top)*sy,cxW,cxH);
+}
+
+function drawGrid(ctx,w,h){
+  const mx=w/2,my=h/2,pad=14;
+
+  // white background
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+
+  // dashed circle
+  const r=Math.min(w,h)*0.46;
+  ctx.beginPath();ctx.arc(mx,my,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=1;ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
+
+  // solid axes
+  ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=1;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(mx,0);ctx.lineTo(mx,h);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,my);ctx.lineTo(w,my);ctx.stroke();
+
+  // axis edge labels — italic, small
+  ctx.fillStyle='rgba(0,0,0,0.35)';ctx.font='italic 10px "Libre Baskerville",Georgia,serif';ctx.textAlign='center';
+  ctx.fillText('high arousal',mx,pad+2);
+  ctx.fillText('low arousal',mx,h-4);
+  ctx.textAlign='left';ctx.fillText('pleasant',w-68,my+4);
+  ctx.textAlign='right';ctx.fillText('unpleasant',68,my+4);
+
+  // quadrant labels — bold, larger, at diagonals
+  ctx.fillStyle='rgba(0,0,0,0.55)';ctx.font='bold 12px "DM Mono",monospace';
+  ctx.textAlign='left';
+  ctx.fillText('tense',   mx*0.18, my*0.42);
+  ctx.fillText('excited', mx*1.38, my*0.42);
+  ctx.fillText('depressed',mx*0.10, my*1.72);
+  ctx.fillText('content', mx*1.38, my*1.72);
+
+  ctx.textAlign='left'; // reset
+}
+
+function drawCx(hv,ha){
+  if(!cxCtx)return;
+  const ctx=cxCtx,w=cxW,h=cxH;
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+  drawGrid(ctx,w,h);
+  // study points
+  // study points hidden during rating to avoid anchoring bias
+  // prior ratings
+  Object.entries(userRatings).forEach(([id,r])=>{
+    const clip=CLIPS.find(c=>c.id===id);if(!clip)return;
+    const xy=toXY(r.v,r.a,w,h);
+    ctx.beginPath();ctx.arc(xy.x,xy.y,8,0,Math.PI*2);ctx.fillStyle='#2a6b8a2a';ctx.fill();ctx.strokeStyle='#2a6b8a';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#2a6b8a';ctx.font='9px "DM Mono",monospace';ctx.fillText(clip.label,xy.x+10,xy.y+3);
+  });
+  // hover ghost
+  if(hv!==undefined&&!dragging&&curClip!==null){
+    const xy=toXY(hv,ha,w,h);ctx.beginPath();ctx.arc(xy.x,xy.y,8,0,Math.PI*2);ctx.fillStyle='rgba(196,92,42,0.12)';ctx.fill();ctx.strokeStyle='rgba(196,92,42,0.35)';ctx.lineWidth=1;ctx.stroke();
+  }
+  // current rating dot
+  if(curRating&&curClip!==null){
+    const clip=CLIPS[curClip],xy=toXY(curRating.v,curRating.a,w,h);
+    const g=ctx.createRadialGradient(xy.x,xy.y,0,xy.x,xy.y,18);g.addColorStop(0,'rgba(196,92,42,0.18)');g.addColorStop(1,'rgba(196,92,42,0)');
+    ctx.beginPath();ctx.arc(xy.x,xy.y,18,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath();ctx.arc(xy.x,xy.y,9,0,Math.PI*2);ctx.fillStyle='#c45c2a';ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#c45c2a';ctx.font='bold 9px "DM Mono",monospace';ctx.fillText(clip.label,xy.x+12,xy.y+3);
+  }
+}
+
+function initCx(){
+  cxCanvas=document.getElementById('cxCanvas');
+  const wrap=cxCanvas.parentElement;
+  const sz=Math.min(wrap.offsetWidth,400);
+  cxW=sz;cxH=sz;
+  cxCanvas.width=cxW;cxCanvas.height=cxH;
+  cxCtx=cxCanvas.getContext('2d');
+  // attach listeners once via data attribute flag
+  if(!cxCanvas.dataset.wired){
+    cxCanvas.dataset.wired='1';
+    cxCanvas.addEventListener('mousemove',e=>{if(!dragging){const va=evToVA(e,cxCanvas);drawCx(va.v,va.a);}});
+    cxCanvas.addEventListener('mouseleave',()=>{if(!dragging)drawCx();});
+    cxCanvas.addEventListener('mousedown',e=>{
+      e.preventDefault();dragging=true;cxCanvas.style.cursor='grabbing';
+      curRating=evToVA(e,cxCanvas);drawCx();updateUI();
+    });
+    window.addEventListener('mousemove',e=>{
+      if(!dragging)return;curRating=evToVA(e,cxCanvas);drawCx();updateUI();
+    });
+    window.addEventListener('mouseup',()=>{
+      if(!dragging)return;dragging=false;cxCanvas.style.cursor='crosshair';
+    });
+    cxCanvas.addEventListener('touchstart',e=>{
+      e.preventDefault();dragging=true;cxCanvas.style.cursor='grabbing';
+      curRating=evToVA(e.touches[0],cxCanvas);drawCx();updateUI();
+    },{passive:false});
+    window.addEventListener('touchmove',e=>{
+      if(!dragging)return;e.preventDefault();curRating=evToVA(e.touches[0],cxCanvas);drawCx();updateUI();
+    },{passive:false});
+    window.addEventListener('touchend',()=>{if(dragging){dragging=false;cxCanvas.style.cursor='crosshair';}});
+  }
+  drawCx();
+}
+
+function updateUI(){
+  const btn=document.getElementById('submitBtn'),clr=document.getElementById('clearBtn'),crd=document.getElementById('cxCoords');
+  if(curRating){
+    crd.textContent=`v = ${(curRating.v>=0?'+':'')+curRating.v.toFixed(3)},  a = ${(curRating.a>=0?'+':'')+curRating.a.toFixed(3)}`;
+    btn.disabled=false;clr.style.display='';
+  }else{crd.textContent='—';btn.disabled=true;clr.style.display='none';}
+}
+function clearRating(){curRating=null;drawCx();updateUI();}
+function submitRating(){
+  if(!curRating||curClip===null)return;
+  userRatings[CLIPS[curClip].id]={v:curRating.v,a:curRating.a};
+  const n=Object.keys(userRatings).length;
+  document.getElementById('ratedCount').textContent=`${n} / ${CLIPS.length} placed`;
+  buildClipList();
+  const next=CLIPS.findIndex((c,i)=>i!==curClip&&!userRatings[c.id]);
+  if(next>=0)selectClip(next);
+  if(n>=CLIPS.length){document.getElementById('submitBtn').textContent='See results →';document.getElementById('submitBtn').onclick=()=>goTo('stage-reveal');}
+}
+
+// ═══ REVEAL ══════════════════════════════════════════════════════════════════
+function buildReveal(){
+  document.getElementById('revealGrid').innerHTML=CLIPS.map(clip=>{
+    const ur=userRatings[clip.id];
+    const dv=ur?((ur.v-clip.mv)>=0?'+':'')+((ur.v-clip.mv).toFixed(3)):'—';
+    const da=ur?((ur.a-clip.ma)>=0?'+':'')+((ur.a-clip.ma).toFixed(3)):'—';
+    const col=ur?(Math.abs(ur.v-clip.mv)<0.1?'var(--green)':Math.abs(ur.v-clip.mv)<0.25?'var(--accent)':'red'):'var(--ghost3)';
+    return`<div class="rev-card">
+      <div class="rev-lbl">${clip.label}</div>
+      <canvas id="rc_${clip.id.replace(/\W/g,'_')}" class="rev-canvas"></canvas>
+      <div class="rev-stats">
+        Study mean: <strong>v=${clip.mv.toFixed(3)}, a=${clip.ma.toFixed(3)}</strong><br>
+        Your rating: <strong>${ur?`v=${ur.v.toFixed(3)}, a=${ur.a.toFixed(3)}`:'not rated'}</strong><br>
+        ${ur?`Δv = <span style="color:${col}">${dv}</span>,  Δa = ${da}`:''}
+      </div>
+    </div>`;
+  }).join('');
+  CLIPS.forEach(clip=>{
+    const cv=document.getElementById('rc_'+clip.id.replace(/\W/g,'_'));if(!cv)return;
+    const s=cv.offsetWidth||240;cv.width=s;cv.height=s;
+    const ctx=cv.getContext('2d'),mx=s/2,my=s/2;
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,s,s);
+    drawGrid(ctx,s,s);
+    // no background scatter — comparison is just your dot vs study mean
+    const sm=toXY(clip.mv,clip.ma,s,s);
+    ctx.beginPath();ctx.arc(sm.x,sm.y,8,0,Math.PI*2);ctx.fillStyle='#c45c2a';ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#c45c2a';ctx.font='8px "DM Mono",monospace';ctx.fillText('study mean',sm.x+10,sm.y+3);
+    const ur=userRatings[clip.id];
+    if(ur){
+      const up=toXY(ur.v,ur.a,s,s);
+      ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(sm.x,sm.y);ctx.lineTo(up.x,up.y);ctx.stroke();ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(up.x,up.y,8,0,Math.PI*2);ctx.fillStyle='#2a6b8a';ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle='#2a6b8a';ctx.font='8px "DM Mono",monospace';ctx.fillText('your rating',up.x+10,up.y+3);
+    }
+  });
+}
+
+// ═══ UPLOAD & PREDICT ════════════════════════════════════════════════════════
+const upAudioEl=document.getElementById('upAudioEl');
+let upCanvas,upCtx,upW,upH;
+
+function initUploadCanvas(){
+  upCanvas=document.getElementById('upCanvas');
+  const wrap=upCanvas.parentElement;
+  // offsetWidth is 0 if panel not yet visible — use clientWidth or fallback
+  const sz=Math.min(wrap.offsetWidth||wrap.clientWidth||400,400);
+  if(sz<10)return; // not ready yet
+  upW=sz;upH=sz;upCanvas.width=upW;upCanvas.height=upH;
+  upCtx=upCanvas.getContext('2d');
+  drawUpResult(null,null);
+}
+
+const upDrop=document.getElementById('upDrop');
+upDrop.addEventListener('dragover',e=>{e.preventDefault();upDrop.classList.add('over');});
+upDrop.addEventListener('dragleave',()=>upDrop.classList.remove('over'));
+upDrop.addEventListener('drop',e=>{
+  e.preventDefault();upDrop.classList.remove('over');
+  const f=e.dataTransfer.files[0];
+  if(f&&AUDIO_EXTS.has(f.name.slice(f.name.lastIndexOf('.')).toLowerCase()))loadUpFile(f);
+});
+
+function loadUpFile(file){
+  if(!file)return;
+  upAudioEl.src=URL.createObjectURL(file);upAudioEl.load();
+  document.getElementById('upPlayerName').textContent=file.name;
+  document.getElementById('upPlayerWrap').style.display='block';
+  document.getElementById('procMsg').style.display='block';
+  document.getElementById('featPanel').style.display='none';
+  document.getElementById('upResult').style.display='none';
+  document.getElementById('upNoFile').style.display='none';
+  document.getElementById('ltPanel').style.display='none';
+  upPlaying=false;document.getElementById('upPlayBtn').textContent='▶';
+  extractAndPredict(file);
+}
+function toggleUpload(){
+  if(!upAudioEl.src)return;
+  if(upPlaying){upAudioEl.pause();document.getElementById('upPlayBtn').textContent='▶';upPlaying=false;}
+  else upAudioEl.play().then(()=>{document.getElementById('upPlayBtn').textContent='■';upPlaying=true;}).catch(console.warn);
+}
+upAudioEl.addEventListener('timeupdate',()=>{
+  if(!upAudioEl.duration)return;
+  document.getElementById('upFill').style.width=(upAudioEl.currentTime/upAudioEl.duration*100)+'%';
+  document.getElementById('upTimeLbl').textContent=fmt(upAudioEl.currentTime)+' / '+fmt(upAudioEl.duration);
+});
+upAudioEl.addEventListener('ended',()=>{document.getElementById('upPlayBtn').textContent='▶';upPlaying=false;});
+document.getElementById('upProgWrap').addEventListener('click',e=>{
+  if(!upAudioEl.duration)return;
+  const r=e.currentTarget.getBoundingClientRect();upAudioEl.currentTime=(e.clientX-r.left)/r.width*upAudioEl.duration;
+});
+
+async function extractAndPredict(file){
+  try{
+    const buf=await file.arrayBuffer();
+    const actx=new(window.AudioContext||window.webkitAudioContext)();
+    const ab=await actx.decodeAudioData(buf);
+    const sr=22050,nSamp=Math.ceil(ab.duration*sr);
+    const octx=new OfflineAudioContext(1,nSamp,sr);
+    const src=octx.createBufferSource();src.buffer=ab;src.connect(octx.destination);src.start();
+    const rendered=await octx.startRendering();actx.close();
+    uploadFeats=computeFeats(rendered.getChannelData(0),sr,ab.duration);
+    document.getElementById('procMsg').style.display='none';
+    document.getElementById('featPanel').style.display='block';
+    document.getElementById('ltPanel').style.display='block';
+    showFeatGrid(uploadFeats);
+    basePred=predict(MODEL.features.map((f,i)=>uploadFeats[f]!==undefined?uploadFeats[f]:MODEL.mean[i]));
+    document.getElementById('upResult').style.display='block';
+    // init canvas now that it's visible and has real dimensions
+    requestAnimationFrame(()=>{initUploadCanvas();updatePred();});
+  }catch(e){document.getElementById('procMsg').textContent='✗ '+e.message;console.error(e);}
+}
+function setLT(type,btn){ltType=type;document.querySelectorAll('.lt-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');updatePred();}
+function updatePred(){
+  if(!basePred)return;
+  const off=LT[ltType];
+  const adj={v:Math.max(-1,Math.min(1,basePred.v+off.dv)),a:Math.max(-1,Math.min(1,basePred.a+off.da))};
+  if(!upCtx)initUploadCanvas();
+  drawUpResult(basePred,adj);showStats(basePred,adj,off);showDrivers();
+}
+function drawUpResult(base,adj){
+  if(!upCtx)return;
+  const ctx=upCtx,w=upW,h=upH;
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+  drawGrid(ctx,w,h);
+  // study points hidden during rating to avoid anchoring bias
+  // demo clip cohort means for spatial context
+  CLIPS.forEach(c=>{
+    const xy=toXY(c.mv,c.ma,w,h);
+    ctx.beginPath();ctx.arc(xy.x,xy.y,5,0,Math.PI*2);
+    ctx.fillStyle='rgba(15,14,12,0.10)';ctx.fill();
+    ctx.strokeStyle='rgba(15,14,12,0.22)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='rgba(15,14,12,0.3)';ctx.font='8px "DM Mono",monospace';
+    ctx.fillText(c.label,xy.x+7,xy.y+3);
+  });
+  // user's own stage-1 ratings
+  Object.values(userRatings).forEach(r=>{const xy=toXY(r.v,r.a,w,h);ctx.beginPath();ctx.arc(xy.x,xy.y,5,0,Math.PI*2);ctx.fillStyle='#2a6b8a33';ctx.fill();ctx.strokeStyle='#2a6b8a55';ctx.lineWidth=1;ctx.stroke();});
+  if(!base)return;
+  const bp=toXY(base.v,base.a,w,h);
+  const g=ctx.createRadialGradient(bp.x,bp.y,0,bp.x,bp.y,20);g.addColorStop(0,'rgba(196,92,42,0.18)');g.addColorStop(1,'rgba(196,92,42,0)');
+  ctx.beginPath();ctx.arc(bp.x,bp.y,20,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  ctx.beginPath();ctx.arc(bp.x,bp.y,10,0,Math.PI*2);ctx.fillStyle='#c45c2a';ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#c45c2a';ctx.font='9px "DM Mono",monospace';ctx.fillText('predicted',bp.x+13,bp.y+3);
+  if(adj&&(Math.abs(adj.v-base.v)>.01||Math.abs(adj.a-base.a)>.01)){
+    const ap=toXY(adj.v,adj.a,w,h);
+    ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(42,107,138,0.6)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(bp.x,bp.y);ctx.lineTo(ap.x,ap.y);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(ap.x,ap.y,9,0,Math.PI*2);ctx.fillStyle='#2a6b8a';ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#2a6b8a';ctx.font='9px "DM Mono",monospace';ctx.fillText('adjusted',ap.x+12,ap.y+3);
+  }
+}
+function showStats(base,adj,off){
+  const sv=v=>(v>=0?'+':'')+v.toFixed(3);
+  const ql=(v,a)=>v>.1&&a>.1?'excited / happy':v>.1&&a<-.1?'calm / pleasant':v<-.1&&a>.1?'tense / unpleasant':v<-.1&&a<-.1?'sad / fatigued':'neutral';
+  document.getElementById('statGrid').innerHTML=`
+    <div class="stat-box"><div class="stat-val" style="color:${base.v>0?'var(--green)':'red'}">${sv(base.v)}</div><div class="stat-lbl">Predicted valence</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:${base.a>0?'#8a4a2a':'var(--blue)'}">${sv(base.a)}</div><div class="stat-lbl">Predicted arousal</div></div>
+    <div class="stat-box" style="grid-column:1/-1;font-size:11px;line-height:1.7;color:var(--ghost3);">
+      <strong style="color:var(--ink);">Quadrant:</strong> ${ql(base.v,base.a)}<br>
+      ${Math.abs(off.dv)>.001?`<strong style="color:var(--ink);">${ltType}:</strong> Δv=${sv(off.dv)}, Δa=${sv(off.da)}`:'<span style="opacity:.5;">No listener adjustment</span>'}
+    </div>`;
+}
+function showDrivers(){
+  if(!uploadFeats||!basePred)return;
+  const vec=MODEL.features.map((f,i)=>uploadFeats[f]!==undefined?uploadFeats[f]:MODEL.mean[i]);
+  const c=MODEL.features.map((f,i)=>({f,cv:(vec[i]-MODEL.mean[i])/(MODEL.std[i]||1e-8)*MODEL.coef_v[i]}));
+  c.sort((a,b)=>Math.abs(b.cv)-Math.abs(a.cv));
+  document.getElementById('driverPanel').innerHTML=`<div class="sec-label" style="margin-bottom:.4rem;">Top valence drivers</div>`+
+    c.slice(0,5).map(x=>`<div class="feat-row"><span class="feat-name">${x.f}</span><span class="feat-val" style="color:${x.cv>0?'var(--green)':'red'}">${x.cv>0?'↑ pleasant':'↓ unpleasant'}</span></div>`).join('');
+}
+
+// ═══ FEATURE EXTRACTION ══════════════════════════════════════════════════════
+function fmean(a){return a.length?a.reduce((s,v)=>s+v,0)/a.length:0;}
+function fstd(a){const m=fmean(a);return a.length?Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length):0;}
+function nextP2(n){let p=1;while(p<n)p<<=1;return p;}
+function fftMag(frame){
+  const n=nextP2(frame.length);
+  const re=new Float32Array(n),im=new Float32Array(n);
+  for(let i=0;i<frame.length;i++)re[i]=frame[i]||0;
+  for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){const tr=re[i],ti=im[i];re[i]=re[j];im[i]=im[j];re[j]=tr;im[j]=ti;}}
+  for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let j=0;j<len/2;j++){const ur=re[i+j],ui=im[i+j],vr=re[i+j+len/2]*cr-im[i+j+len/2]*ci,vi=re[i+j+len/2]*ci+im[i+j+len/2]*cr;re[i+j]=ur+vr;im[i+j]=ui+vi;re[i+j+len/2]=ur-vr;im[i+j+len/2]=ui-vi;const nr=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=nr;}}}
+  const mag=new Float32Array(n/2);for(let i=0;i<n/2;i++)mag[i]=Math.sqrt(re[i]**2+im[i]**2);return mag;
+}
+function melFilters(nM,nF,sr){
+  const h2m=f=>1127*Math.log(1+f/700),m2h=m=>700*(Math.exp(m/1127)-1);
+  const mn=h2m(0),mx=h2m(sr/2),mpts=Array.from({length:nM+2},(_,i)=>mn+(mx-mn)*i/(nM+1)),hpts=mpts.map(m2h),bpts=hpts.map(f=>Math.round(f*nF/sr));
+  return Array.from({length:nM},(_,m)=>{const f=[];for(let k=bpts[m];k<bpts[m+2]&&k<nF/2;k++)f.push({bin:k,w:k<bpts[m+1]?(k-bpts[m])/(bpts[m+1]-bpts[m]):(bpts[m+2]-k)/(bpts[m+2]-bpts[m+1])});return f;});
+}
+function hann(fr,n){const w=new Float32Array(n);for(let i=0;i<n;i++)w[i]=(fr[i]||0)*(.5-.5*Math.cos(2*Math.PI*i/(n-1)));return w;}
+
+function computeFeats(y,sr,dur){
+  const hop=512,nF=2048,N=y.length,feats={};
+  feats.duration_s=dur||N/sr;
+  const rmsF=[];for(let i=0;i<N;i+=hop){const sl=y.slice(i,Math.min(i+hop,N));rmsF.push(Math.sqrt(sl.reduce((s,v)=>s+v*v,0)/Math.max(1,sl.length)));}
+  feats.rms_mean=fmean(rmsF);feats.rms_std=fstd(rmsF);feats.rms_max=Math.max(...rmsF);feats.rms_dynamic_range=feats.rms_max-Math.min(...rmsF);
+  const zcrF=[];for(let i=0;i<N-hop;i+=hop){let z=0;for(let j=i;j<i+hop-1;j++)if((y[j]>=0)!==(y[j+1]>=0))z++;zcrF.push(z/hop);}
+  feats.zcr_mean=fmean(zcrF);feats.zcr_std=fstd(zcrF);
+  const frames=[],step=hop*4;for(let i=0;i+nF<N;i+=step){frames.push(y.slice(i,i+nF));if(frames.length>=64)break;}
+  const fRes=sr/nF,cF=[],bwF=[],roF=[],flF=[];
+  const BD=[[20,80,'sub_bass'],[80,250,'bass'],[250,500,'low_mid'],[500,2000,'mid'],[2000,4000,'high_mid'],[4000,6000,'presence'],[6000,20000,'brilliance']];
+  const bE={};BD.forEach(([,,n])=>bE[n]=[]);
+  frames.forEach(fr=>{
+    const mag=fftMag(hann(fr,nF));const tot=mag.reduce((s,v)=>s+v*v,0)+1e-10;
+    let ws=0,ms=0;mag.forEach((m,i)=>{ws+=m*i*fRes;ms+=m;});cF.push(ms?ws/ms:0);
+    const sc=cF[cF.length-1];let bw=0;mag.forEach((m,i)=>bw+=m*(i*fRes-sc)**2);bwF.push(ms?Math.sqrt(bw/ms):0);
+    let cum=0,ro=0;for(let i=0;i<mag.length;i++){cum+=mag[i]*mag[i];if(cum/tot>=0.85){ro=i*fRes;break;}}roF.push(ro);
+    const lm=mag.reduce((s,v)=>s+Math.log(v+1e-10),0)/mag.length;flF.push(Math.exp(lm)/(ms/mag.length+1e-10));
+    BD.forEach(([f0,f1,n])=>{let e=0;const lo=Math.ceil(f0/fRes),hi=Math.min(mag.length,Math.floor(f1/fRes));for(let i=lo;i<hi;i++)e+=mag[i]*mag[i];bE[n].push(e);});
+  });
+  feats.spectral_centroid_mean=fmean(cF);feats.spectral_centroid_std=fstd(cF);
+  feats.spectral_bandwidth_mean=fmean(bwF);feats.spectral_bandwidth_std=fstd(bwF);
+  feats.spectral_rolloff_mean=fmean(roF);feats.spectral_rolloff_std=fstd(roF);
+  feats.spectral_flatness_mean=fmean(flF);feats.spectral_flatness_std=fstd(flF);
+  const totE=BD.reduce((s,[,,n])=>s+fmean(bE[n]),0)+1e-10;
+  BD.forEach(([,,n])=>{feats[`energy_${n}`]=fmean(bE[n]);feats[`energy_${n}_rel`]=fmean(bE[n])/totE;});
+  // Tempo
+  const el=Math.min(2048,N),env=[];for(let i=0;i<el;i+=hop)env.push(fmean(Array.from(y.slice(i,i+hop)).map(Math.abs)));
+  let bL=1,bC=-Infinity;for(let lag=6;lag<Math.min(env.length/2,80);lag++){let c=0;for(let i=0;i<env.length-lag;i++)c+=env[i]*env[i+lag];if(c>bC){bC=c;bL=lag;}}
+  feats.tempo_bpm=Math.max(40,Math.min(220,(sr/hop)/bL*60));
+  feats.beat_count=0;feats.beat_density=0;feats.onset_strength_mean=feats.rms_std;feats.onset_strength_std=feats.rms_std*.5;feats.onset_strength_max=feats.rms_max;
+  // MFCCs
+  const nM=40,nMC=13,mF=melFilters(nM,nF,sr),mA=Array.from({length:nMC},()=>[]);
+  frames.slice(0,48).forEach(fr=>{
+    const mag=fftMag(hann(fr,nF));
+    const mE=mF.map(f=>Math.log(f.reduce((s,{bin:b,w:w2})=>s+mag[b]**2*w2,0)+1e-10));
+    for(let k=0;k<nMC;k++){let c=0;for(let m=0;m<nM;m++)c+=mE[m]*Math.cos(Math.PI*k*(m+.5)/nM);mA[k].push(c);}
+  });
+  for(let k=0;k<nMC;k++){feats[`mfcc${k+1}_mean`]=fmean(mA[k]);feats[`mfcc${k+1}_std`]=fstd(mA[k]);}
+  // Chroma
+  const chA=Array.from({length:12},()=>[]);
+  frames.slice(0,48).forEach(fr=>{
+    const mag=fftMag(hann(fr,nF));const ch=new Array(12).fill(0);
+    for(let i=1;i<mag.length;i++){const f=i*fRes;if(f<27.5||f>4186)continue;const pc=((Math.round(12*Math.log2(f/440)+69)%12)+12)%12;ch[pc]+=mag[i];}
+    chA.forEach((a,j)=>a.push(ch[j]));
+  });
+  const pcN=['C','Cs','D','Ds','E','F','Fs','G','Gs','A','As','B'];
+  feats.chroma_mean=fmean(chA.flat());feats.chroma_std=fstd(chA.flat());
+  pcN.forEach((n,i)=>feats[`chroma_${n}_mean`]=fmean(chA[i]));
+  for(let k=0;k<6;k++)feats[`tonnetz${k+1}_mean`]=fmean(chA[k%12]);
+  feats.roughness_proxy=feats.zcr_mean*(1-feats.spectral_flatness_mean);
+  for(let b=0;b<7;b++)feats[`spectral_contrast_band${b}_mean`]=feats[`energy_${BD[Math.min(b,6)][2]}_rel`]*20;
+  return feats;
+}
+
+function showFeatGrid(f){
+  document.getElementById('featGrid').innerHTML=[
+    ['Duration',`${f.duration_s?.toFixed(1)}s`],['RMS energy',f.rms_mean?.toFixed(4)],
+    ['Zero crossing',f.zcr_mean?.toFixed(4)],['Spectral centroid',`${f.spectral_centroid_mean?.toFixed(0)} Hz`],
+    ['Spectral flatness',f.spectral_flatness_mean?.toFixed(4)],['Mid energy (rel)',f.energy_mid_rel?.toFixed(4)],
+    ['Presence (rel)',f.energy_presence_rel?.toFixed(4)],['Tempo',`${f.tempo_bpm?.toFixed(0)} bpm`],
+    ['MFCC 1',f.mfcc1_mean?.toFixed(2)],['MFCC 3',f.mfcc3_mean?.toFixed(2)],
+  ].map(([n,v])=>`<div class="feat-row"><span class="feat-name">${n}</span><span class="feat-val">${v||'—'}</span></div>`).join('');
+}
+
+// ═══ LISTENER TYPE TOOLTIPS ═══════════════════════════════════════════════
+const LT_TIPS={
+  mean:`<strong>Mean listener</strong> — No adjustment applied. The prediction reflects the average placement across all experiment participants, regardless of background or sensitivity.`,
+  sensitive:`<strong>Sound-sensitive listener</strong> — Applies a −0.15 valence / +0.08 arousal offset. In the experiment, participants who reported that sound limits their daily life rated clips as more unpleasant and more activating on average. The shift moves the prediction toward the tense quadrant.`,
+  musician:`<strong>Trained musician (6+ years formal)</strong> — Applies a +0.12 valence / −0.10 arousal offset. Musically trained participants tended to rate soundscape clips as more pleasant and calmer than non-musicians, possibly reflecting greater tolerance for or analytical engagement with complex acoustic environments.`,
+  daily:`<strong>Daily soundscape exposure</strong> — Applies a −0.08 valence / +0.05 arousal offset. Participants who encounter soundscapes daily rated clips slightly more negatively and with slightly higher arousal, consistent with a sensitisation or critical-listening effect from repeated exposure.`
+};
+function showTip(type,btn){
+  const el=document.getElementById('ltTip');
+  if(!el)return;
+  el.innerHTML=LT_TIPS[type]||'';
+  el.style.display='block';
+}
+function hideTip(){
+  const el=document.getElementById('ltTip');
+  if(el)el.style.display='none';
+}
+
+function fmt(s){return`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
+window.addEventListener('resize',()=>{
+  if(document.getElementById('stage-listen').classList.contains('active')){const old=curRating;initCx();curRating=old;drawCx();}
+  if(document.getElementById('stage-upload').classList.contains('active'))initUploadCanvas();
+});
+</script>
+</body>
+</html>

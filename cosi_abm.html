@@ -152,7 +152,9 @@ input[type=range]{flex:1;accent-color:var(--ink);height:3px;}
         <div class="ctrl-row"><span class="ctrl-label">Steps</span><input type="range" id="nSteps" min="100" max="600" step="50" value="300" oninput="document.getElementById('nStepsV').textContent=this.value"><span class="ctrl-val" id="nStepsV">300</span></div>
         <div class="ctrl-row"><span class="ctrl-label">Speed</span><input type="range" id="simSpeed" min="1" max="10" value="3" oninput="document.getElementById('simSpeedV').textContent=this.value"><span class="ctrl-val" id="simSpeedV">3</span></div>
         <div class="ctrl-row"><span class="ctrl-label">Visit arc</span><input type="range" id="visitArc" min="0" max="10" value="5" oninput="document.getElementById('visitArcV').textContent=this.value"><span class="ctrl-val" id="visitArcV">5</span></div>
-        <p class="note" style="margin-bottom:.4rem;">Visit arc: how much fatigue accumulates over time (0=none, 10=strong end-of-visit pull toward restorative spaces)</p>
+        <div class="ctrl-row"><span class="ctrl-label">Sound bleed</span><input type="range" id="soundBleed" min="0" max="10" value="2" oninput="document.getElementById('soundBleedV').textContent=this.value;updateBleedPreview()"><span class="ctrl-val" id="soundBleedV">2</span></div>
+        <p class="note" style="margin-bottom:.4rem;">Visit arc: fatigue pull toward restorative spaces. Sound bleed: how much adjacent spaces acoustically contaminate each other (0=isolated, 10=strong bleed).</p>
+        <div id="bleedPreview" style="font-size:10px;color:var(--ghost3);margin-bottom:.4rem;display:none;"></div>
         <button class="btn" onclick="runSim()">▶ Run simulation</button>
         <button class="btn-o" onclick="resetSim()">Reset</button>
       </div>
@@ -188,6 +190,7 @@ input[type=range]{flex:1;accent-color:var(--ink);height:3px;}
           <div class="leg-row"><span class="leg-dot" style="background:#c45c2a;border:2px solid white;"></span>Orange = positive valence</div>
           <div class="leg-row"><span class="leg-dot" style="background:#2a6b8a;border:2px solid white;"></span>Blue = negative valence</div>
           <div class="leg-row"><div style="width:24px;height:3px;background:linear-gradient(90deg,transparent,rgba(196,92,42,0.5));flex-shrink:0;"></div>Agent trail</div>
+          <div class="leg-row"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;border:2px dashed #2a6b8a;flex-shrink:0;"></span>Bleed ring: orange = acoustically improved, blue = worsened</div>
         </div>
       </div>
 
@@ -246,6 +249,45 @@ const EDGES = [
 const ADJ = {};
 Object.keys(NODES_DEFAULT).forEach(n=>ADJ[n]=[]);
 EDGES.forEach(([a,b])=>{ADJ[a].push(b);ADJ[b].push(a);});
+
+// Effective sound values after bleed — recomputed when bleed slider changes
+let EFFECTIVE = {};
+function computeBleed(){
+  const bleed = parseInt(document.getElementById('soundBleed')?.value||2) / 10;
+  Object.keys(NODES).forEach(id => {
+    const n = NODES[id];
+    const neighbors = ADJ[id];
+    if(bleed === 0 || !neighbors.length){
+      EFFECTIVE[id] = {v: n.v, a: n.a};
+      return;
+    }
+    const neighborWeight = bleed / neighbors.length;
+    const selfWeight = 1 - bleed;
+    let ev = n.v * selfWeight;
+    let ea = n.a * selfWeight;
+    neighbors.forEach(nb => {
+      ev += NODES[nb].v * neighborWeight;
+      ea += NODES[nb].a * neighborWeight;
+    });
+    EFFECTIVE[id] = {v: Math.max(-1,Math.min(1,ev)), a: Math.max(-1,Math.min(1,ea))};
+  });
+}
+
+function updateBleedPreview(){
+  computeBleed();
+  const bleed = parseInt(document.getElementById('soundBleed')?.value||2)/10;
+  const prev = document.getElementById('bleedPreview');
+  if(!prev) return;
+  if(bleed === 0){ prev.style.display='none'; return; }
+  const deltas = Object.entries(NODES).map(([id,n]) => {
+    const dv = Math.abs((EFFECTIVE[id]?.v||n.v) - n.v);
+    const da = Math.abs((EFFECTIVE[id]?.a||n.a) - n.a);
+    return {id, label:n.label, dv, da, delta: dv+da};
+  }).sort((a,b)=>b.delta-a.delta).slice(0,3);
+  prev.style.display='block';
+  prev.innerHTML = '<strong style="color:var(--ink);">Most affected by bleed:</strong> ' +
+    deltas.map(d=>`${d.label} (Δv=${d.dv.toFixed(2)})`).join(', ');
+}
 
 // ═══ MODEL DESCRIPTIONS ══════════════════════════════════════════════════════
 const MODEL_DESCS = {
@@ -379,23 +421,25 @@ function chooseNext(ag, modelName){
   }
   neighbors.forEach(n => {
     const nd = NODES[n];
-    let s = -(recentPenalty[n]||0);  // start with recency penalty
+    const eff = EFFECTIVE[n] || nd;   // use bleed-adjusted effective values
+    let s = -(recentPenalty[n]||0);
     if(modelName === 'valence'){
-      s = nd.v + (Math.random()-.5)*.6;
+      s += eff.v + (Math.random()-.5)*.6;
       // visit arc: late-stage push toward restorative
       if(ag.visitStage >= 2) s += (nd.v - nd.a*.5) * arcStr;
     } else if(modelName === 'arousal'){
       const want = ag.mood_a > 0.2 ? -1 : 1;
-      s = -Math.abs(nd.a - want) + (Math.random()-.5)*.55;
+      s += -Math.abs(eff.a - want) + (Math.random()-.5)*.55;
       if(ag.visitStage >= 2) s += (-nd.a) * arcStr * .5;
     } else if(modelName === 'incongruity'){
-      const dv = Math.abs(nd.v - cur.v), da = Math.abs(nd.a - cur.a);
-      s = (dv + da) + (Math.random()-.5)*.5;
+      const dv = Math.abs(eff.v - (EFFECTIVE[ag.node]?.v||cur.v));
+      const da = Math.abs(eff.a - (EFFECTIVE[ag.node]?.a||cur.a));
+      s += (dv + da) + (Math.random()-.5)*.5;
       if(ag.visitStage >= 2) s += nd.v * arcStr * .3; // some comfort-seeking late
     } else if(modelName === 'accumulation'){
-      const needV = ag.mood_v < -.15 ? nd.v : nd.v * .4;
-      const needA = ag.mood_a > 0.4  ? -nd.a * .6 : nd.a * .25;
-      s = needV + needA + (Math.random()-.5)*.45;
+      const needV = ag.mood_v < -.15 ? eff.v : eff.v * .4;
+      const needA = ag.mood_a > 0.4  ? -eff.a * .6 : eff.a * .25;
+      s += needV + needA + (Math.random()-.5)*.45;
       if(ag.visitStage >= 2) s += (nd.v - nd.a*.7) * arcStr;
     }
     scores[n] = s;
@@ -417,8 +461,8 @@ function stepAgent(ag, modelName, heatmap, dwellTime){
   heatmap[ag.node] = (heatmap[ag.node]||0) + 1;
   dwellTime[ag.node] = (dwellTime[ag.node]||0) + 1;
 
-  // update internal state
-  const dest = NODES[ag.node];
+  // update internal state using effective (bleed-adjusted) sound
+  const dest = EFFECTIVE[ag.node] || NODES[ag.node];
   const decay = 0.93;
   ag.mood_v = ag.mood_v*decay + dest.v*(1-decay);
   ag.mood_a = ag.mood_a*decay + dest.a*(1-decay);
@@ -526,6 +570,17 @@ function drawScene(targetCtx, w, h, agents, heatmap, dwellTime, vm, showAgents, 
       targetCtx.strokeRect(x-20, y+r+4, 40, 5);
     }
 
+    // outer ring shows bleed effect if significant
+    const eff2 = EFFECTIVE[id];
+    const bleedDelta = eff2 ? Math.abs(eff2.v - NODES[id].v) + Math.abs(eff2.a - NODES[id].a) : 0;
+    if(bleedDelta > 0.05){
+      targetCtx.beginPath(); targetCtx.arc(x,y,r+4,0,Math.PI*2);
+      targetCtx.strokeStyle = eff2.v < NODES[id].v
+        ? `rgba(42,107,138,${Math.min(0.6,bleedDelta)})` // bleed making it worse = blue
+        : `rgba(196,92,42,${Math.min(0.6,bleedDelta)})`; // bleed making it better = orange
+      targetCtx.lineWidth=2; targetCtx.setLineDash([3,3]); targetCtx.stroke();
+      targetCtx.setLineDash([]);
+    }
     // node circle
     targetCtx.beginPath(); targetCtx.arc(x,y,r,0,Math.PI*2);
     targetCtx.fillStyle = nodeColor(id); targetCtx.fill();
@@ -618,6 +673,7 @@ function initHeatmaps(){
 
 function runSim(){
   if(running) return;
+  computeBleed();  // recompute with current slider value before running
   resetSim();
   const n = parseInt(document.getElementById('nAgents').value);
   agents = Array.from({length:n}, (_,i) => makeAgent(i));
@@ -818,8 +874,10 @@ canvas.addEventListener('mousemove', e => {
       const hc=heatmap[found]||0, dc=dwellTime[found]||0;
       document.getElementById('nodeInfo').innerHTML=
         `<strong>${n.label}</strong><br>${n.desc}<br><br>`+
-        `<span style="color:var(--ghost3)">v ${n.v>=0?'+':''}${n.v.toFixed(1)}, `+
-        `a ${n.a>=0?'+':''}${n.a.toFixed(1)}</span>`+
+        `<span style="color:var(--ghost3)">base: v ${n.v>=0?'+':''}${n.v.toFixed(1)}, a ${n.a>=0?'+':''}${n.a.toFixed(1)}</span>`+
+        (EFFECTIVE[found] && (Math.abs(EFFECTIVE[found].v-n.v)>0.01 || Math.abs(EFFECTIVE[found].a-n.a)>0.01)
+          ? `<br><span style="color:var(--accent)">effective: v ${EFFECTIVE[found].v>=0?'+':''}${EFFECTIVE[found].v.toFixed(2)}, a ${EFFECTIVE[found].a>=0?'+':''}${EFFECTIVE[found].a.toFixed(2)} (bleed)</span>`
+          : '') +
         (stepCount>0?`<br><span style="color:var(--ghost3)">visits: ${hc} · dwell: ${dc}</span>`:'');
     } else {
       document.getElementById('nodeInfo').textContent='Hover a space to see its acoustic profile. Double-click to edit.';
@@ -835,6 +893,7 @@ document.getElementById('modelDesc').innerHTML = MODEL_DESCS['valence'];
 fpImg.onload = () => { if(!running) drawAll(); };
 resize();
 initHeatmaps();
+computeBleed();
 drawAll();
 </script>
 </body>

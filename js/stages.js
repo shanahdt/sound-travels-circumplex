@@ -266,15 +266,13 @@
         <h2>That's it \u2014 thank you.</h2>
         <p>The data you've provided will help train models that can predict the
            emotional impression of soundscapes from their audio features alone.</p>
-        <p>If you'd like to know more about the project, or have any feedback, please let us know on Prolific!</p>
-        <p style="margin-top:24px">Your completion code is <strong style="letter-spacing:2px">C7KCJNT1</strong>.
-           Click the button below to submit.</p>
+        <p style="margin-top:24px">You can now close this window.</p>
       </div>`,
-    choices: ["Submit to Prolific"],
-    on_finish: () => {
-      // Save data first, then redirect — beacon survives the page unload.
+    // Final screen: no button, so the study ends here. Save as soon as it appears;
+    // the beforeunload handler in main.js saves again when the tab is closed.
+    choices: [],
+    on_load: () => {
       if (window.__beaconSave) window.__beaconSave();
-      window.location.replace("https://app.prolific.com/submissions/complete?cc=C7KCJNT1");
     },
     data: { stage: "debrief" },
   });

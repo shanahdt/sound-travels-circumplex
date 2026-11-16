@@ -88,7 +88,7 @@
 
     const timeline = [
       ST.stages.consent(jsPsych),
-      ST.stages.prolificId(jsPsych),
+      // ST.stages.prolificId(jsPsych),   // disabled for now; uncomment to collect Prolific IDs again
       ST.stages.disability(),
       ...ST.stages.taskPages,
       ST.stages.lifeRightNow(),

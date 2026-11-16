@@ -18,8 +18,10 @@
     N_PHASE_2: 12,    // mixed across clusters, anti-repeat
     N_PHASE_3: 10,    // within-cluster (fine-grained)
 
-    // DataPipe — get this ID from pipe.jspsych.org after creating an experiment
-    DATAPIPE_ID: "PSAdtRIuNUQR",
+    // Data saving — Google Apps Script web app that writes CSVs to Google Drive.
+    // See google-apps-script/Code.gs. DATA_TOKEN must match TOKEN in that script.
+    DATA_ENDPOINT: "https://script.google.com/macros/s/AKfycbxiEdhlhxJ8mpLYhI5XunD_819LCikRiZSss3BtDNCq-_5QV7vwK_ybI81uW41KtDan3A/exec",   // https://script.google.com/macros/s/.../exec
+    DATA_TOKEN: "3sgon_f8CRW5vy-iuGI0KzwM",
 
     // UI
     PLOT_PIXELS: 500,

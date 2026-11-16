@@ -8,7 +8,7 @@
   async function run() {
     const cfg = ST.config;
 
-    // Per-participant deterministic seed + unique ID for DataPipe filename.
+    // Per-participant deterministic seed + unique ID for the saved data filename.
     // Defined early so on_finish can close over it.
     const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
     const participantId = `p_${seed}`;
@@ -18,17 +18,20 @@
     expContainer.id = 'exp-container';
     document.body.appendChild(expContainer);
 
-    function pipePayload(data) {
-      return JSON.stringify({ experimentID: cfg.DATAPIPE_ID, filename: `${participantId}.csv`, data });
-    }
     // keepalive:true tells the browser to complete the request even after navigation/close.
-    // This is more reliable than sendBeacon for JSON payloads.
+    // text/plain + no-cors avoids a CORS preflight, which Apps Script can't answer;
+    // the response is opaque, but the script still runs and writes the file.
     function beaconSave() {
       try {
-        fetch("https://pipe.jspsych.org/api/data/", {
+        fetch(cfg.DATA_ENDPOINT, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "*/*" },
-          body: pipePayload(jsPsych.data.get().csv()),
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            token: cfg.DATA_TOKEN,
+            filename: `${participantId}.csv`,
+            data: jsPsych.data.get().csv(),
+          }),
           keepalive: true,
         }).catch(() => {});
       } catch (e) {}

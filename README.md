@@ -147,3 +147,21 @@ After any of these changes (except the last, which requires re-running the Pytho
 **Audio doesn't autoplay on first trial.** Browser autoplay policy. The Play button always works as a manual fallback. The intro click usually unlocks autoplay for the rest of the session.
 
 **Demographics form won't submit.** Required radio groups (headphones, hearing) must have a selection. The browser will highlight the missing field.
+
+## Data collection (Google Drive)
+
+Data is saved to Google Drive (previously jsPsych DataPipe → OSF) by a small Google Apps Script
+web app in `google-apps-script/Code.gs`. Each participant becomes one CSV (`p_<seed>.csv`) in the
+Drive folder named by `FOLDER_ID`. Later saves for the same participant overwrite earlier ones,
+but only when the new save is at least as long as the old one.
+
+One-time setup:
+1. Go to https://script.google.com → **New project**, and paste in the contents of `Code.gs`.
+2. Run `testWrite` once from the editor, approve the Drive permission, and check that
+   `test_delete_me.csv` appears in the folder (then delete it).
+3. Go to **Deploy → New deployment → Web app**. Set Execute as **Me** and Who has access to **Anyone**.
+4. Copy the `/exec` URL into `DATA_ENDPOINT` in `js/config.js`. `DATA_TOKEN` there must match `TOKEN`
+   in the script.
+
+If you edit the script later, go to **Deploy → Manage deployments → Edit → New version**. This keeps
+the same URL.

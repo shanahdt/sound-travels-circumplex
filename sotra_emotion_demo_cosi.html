@@ -104,22 +104,21 @@ body{font-family:var(--mono);background:var(--paper);color:var(--ink);min-height
 <div id="stage-intro" class="stage active">
   <p style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ghost3);margin-bottom:1.25rem;">Soundscape Perception Study</p>
   <h1 class="intro-title">Where does a sound <em>live</em> in emotional space?</h1>
-  <p class="intro-body">First, drop your audio folder so the demo can find the four study clips. Then listen and place each one on the arousal–valence circumplex, and see how your ratings compare to the study cohort and the acoustic model.</p>
-  <div class="folder-drop" id="introDrop">
-    <div class="icon">◎</div>
-    <div class="title">Drop your audio folder here</div>
-    <div class="sub">Drag your soundscape recordings folder onto this box.<br>The demo will scan it and find the four clips automatically.<br><span style="font-size:9px;opacity:.6;">Or click to select files manually.</span></div>
-    <input type="file" id="introInput" multiple accept="audio/*" style="display:none;" onchange="handleFileInput(this.files)">
+  <p class="intro-body"><b>This is the exploration tool, not the survey.</b> Nothing you do here is saved or added to the study data. It lets you try the rating task for yourself and see what the model built from survey responses predicts.</p>
+  <div class="intro-body" style="text-align:left;max-width:560px;margin:0 auto 1rem;">
+    <p style="margin-bottom:.5rem;"><b>Part 1: Rate four study clips.</b> Listen to four 12-second field recordings from the study and place each one on a grid of how pleasant or unpleasant and how calm or energized it feels. As soon as you confirm a clip, you will see where study participants placed it on average. The clips load automatically:</p>
+    <ul id="introClipList" style="margin:0 0 .75rem 1.2rem;font-size:12px;line-height:1.8;"></ul>
+    <p><b>Part 2: Upload and predict.</b> Then upload any audio file of your own, such as a recording or a mockup of a space, and the model predicts where listeners would place it.</p>
   </div>
   <div class="status-line" id="introStatus"></div>
-  <button class="btn" id="introBtn" onclick="proceedToListen()" disabled>Begin listening →</button>
-  <p class="note" style="margin-top:.75rem;">Audio stays in your browser — nothing is sent to any server.</p>
+  <button class="btn" id="introBtn" onclick="proceedToListen()">Begin Part 1 →</button>
+  <p class="note" style="margin-top:.75rem;">Headphones recommended. Files you upload in Part 2 stay in your browser and are never sent to any server.</p>
 </div>
 
 <div id="stage-listen" class="stage">
   <div class="hdr">
     <span class="hdr-title">Soundscape Placement</span>
-    <span class="hdr-stage">Stage 01 — Listen &amp; Place</span>
+    <span class="hdr-stage">Part 1 of 2 — Rate four study clips</span>
   </div>
   <div class="body">
     <div class="left-panel">
@@ -138,6 +137,7 @@ body{font-family:var(--mono);background:var(--paper);color:var(--ink);min-height
         </div>
       </div>
       <p class="note" id="ratedCount">0 / 4 placed</p>
+      <p class="note" id="lastCmp" style="margin-top:.5rem;line-height:1.6;"></p>
     </div>
     <div class="right-panel">
       <div class="cx-label" id="cxLabel">Select a clip, then click or drag to place it</div>
@@ -157,24 +157,25 @@ body{font-family:var(--mono);background:var(--paper);color:var(--ink);min-height
 <div id="stage-reveal" class="stage">
   <div class="hdr">
     <span class="hdr-title">Soundscape Placement</span>
-    <span class="hdr-stage">Stage 01 — Results</span>
+    <span class="hdr-stage">Part 1 of 2 — Your ratings vs. the study</span>
     <div class="hdr-right"><button class="pill" onclick="goTo('stage-listen')">← Re-rate</button></div>
   </div>
   <div class="body">
     <div class="reveal-grid" id="revealGrid"></div>
-    <button class="btn" onclick="goTo('stage-upload');requestAnimationFrame(initUploadCanvas);">Continue to Upload Demo →</button>
+    <button class="btn" onclick="goTo('stage-upload');requestAnimationFrame(initUploadCanvas);">Continue to Part 2: Upload &amp; Predict →</button>
   </div>
 </div>
 
 <div id="stage-upload" class="stage">
   <div class="hdr">
     <span class="hdr-title">Soundscape Placement</span>
-    <span class="hdr-stage">Stage 02 — Upload &amp; Predict</span>
+    <span class="hdr-stage">Part 2 of 2 — Upload &amp; predict</span>
     <div class="hdr-right"><button class="pill" onclick="goTo('stage-reveal')">← Results</button></div>
   </div>
   <div class="body">
     <div class="up-panel">
       <div class="sec-label">Audio Input</div>
+      <p class="note" style="margin-bottom:.6rem;line-height:1.6;">Upload any sound file, for example a recording of a space or an audio mockup of a design. The model, trained on survey ratings, predicts where listeners would place it on the same grid. Your file is analyzed in your browser and is never uploaded or saved.</p>
       <div class="up-drop" id="upDrop" onclick="document.getElementById('upInput').click()">
         <div style="font-size:20px;opacity:.4;margin-bottom:.3rem;">◎</div>
         <div style="font-size:12px;font-weight:500;margin-bottom:.2rem;">Drop any audio file here</div>
@@ -251,11 +252,12 @@ const LT={mean:{dv:0,da:0},sensitive:{dv:-.15,da:.08},musician:{dv:.12,da:-.10},
 
 // ═══ STUDY DATA ══════════════════════════════════════════════════════════════
 const CLIPS=[
-  {id:'c6_20231004_180000',cluster:6,mv:-.558,ma:.235,label:'Clip A'},
-  {id:'c2_20231009_185900',cluster:2,mv:-.043,ma:-.110,label:'Clip B'},
-  {id:'c3_20231002_155100',cluster:3,mv:-.452,ma:.299,label:'Clip C'},
-  {id:'c5_20230611_104200T',cluster:5,mv:.259,ma:-.068,label:'Clip D'},
+  {id:'c6_20231004_180000',cluster:6,mv:-.558,ma:.235,label:'Clip A',desc:'Stingray Bay, early evening'},
+  {id:'c2_20231009_185900',cluster:2,mv:-.043,ma:-.110,label:'Clip B',desc:'Animal Encounters Village, evening'},
+  {id:'c3_20231002_155100',cluster:3,mv:-.452,ma:.299,label:'Clip C',desc:'Stingray Bay, afternoon'},
+  {id:'c5_20230611_104200T',cluster:5,mv:.259,ma:-.068,label:'Clip D',desc:'Tigers, morning'},
 ];
+const CLIP_DIR='audio/';  // the same files the survey uses, served alongside this page
 const SPT=[{v:.668,a:.31,c:0},{v:-.431,a:.37,c:0},{v:.604,a:-.727,c:0},{v:.498,a:-.412,c:0},{v:-.097,a:.225,c:1},{v:.378,a:-.194,c:2},{v:.501,a:.127,c:2},{v:-.324,a:.724,c:2},{v:-.827,a:.289,c:2},{v:-.562,a:.5,c:3},{v:-.761,a:.399,c:3},{v:.259,a:-.068,c:5},{v:-.558,a:.001,c:6},{v:-.09,a:.425,c:6},{v:-.37,a:.544,c:6}];
 const CC={0:'#888',1:'#c45c2a',2:'#2a6b8a',3:'#8a6b2a',5:'#6b2a8a',6:'#2a8a6b'};
 const AUDIO_EXTS=new Set(['.wav','.mp3','.flac','.ogg','.m4a','.aac','.opus']);
@@ -303,24 +305,10 @@ function traverseEntry(entry,done){
   } else done();
 }
 
-function handleFileInput(files){Array.from(files).forEach(regFile);afterLoad();}
-
-// Intro drop zone
-const introDrop=document.getElementById('introDrop');
-introDrop.addEventListener('dragover',e=>{e.preventDefault();introDrop.classList.add('over');});
-introDrop.addEventListener('dragleave',()=>introDrop.classList.remove('over'));
-introDrop.addEventListener('drop',e=>{
-  e.preventDefault();introDrop.classList.remove('over');
-  const items=[...e.dataTransfer.items].filter(i=>i.kind==='file');
-  if(!items.length)return;
-  document.getElementById('introStatus').textContent='Scanning…';
-  let p=items.length;const done=()=>{if(--p===0)afterLoad();};
-  items.forEach(item=>{
-    const entry=item.webkitGetAsEntry?.();
-    if(entry)traverseEntry(entry,done);else{regFile(item.getAsFile());done();}
-  });
-});
-introDrop.addEventListener('click',()=>document.getElementById('introInput').click());
+// Study clips load straight from the site; reviewers no longer need local copies.
+CLIPS.forEach(c=>{audioFiles[c.id]=CLIP_DIR+c.id+'.mp3';});
+document.getElementById('introClipList').innerHTML=CLIPS.map(c=>
+  `<li><b>${c.label}</b>: ${c.desc} · <a href="${CLIP_DIR}${c.id}.mp3" download>download</a></li>`).join('');
 
 // ═══ NAV ═════════════════════════════════════════════════════════════════════
 function goTo(id){
@@ -341,7 +329,7 @@ function buildClipList(){
     const has=!!resolveAudio(c.id),rated=!!userRatings[c.id];
     return`<div class="clip-item${i===act?' active':''}" onclick="selectClip(${i})">
       <span class="clip-num">${i+1}</span>
-      <span class="clip-name-wrap" style="opacity:${has?1:.5}">${c.label}<br><span style="font-size:9px;opacity:.6;">${c.id.replace(/^c\d+_/,'')}</span></span>
+      <span class="clip-name-wrap" style="opacity:${has?1:.5}">${c.label}<br><span style="font-size:9px;opacity:.6;">${c.desc}</span></span>
       <span class="clip-check${rated?' done':''}">${rated?'✓':''}</span>
     </div>`;
   }).join('');
@@ -353,7 +341,7 @@ function selectClip(i){
   const c=CLIPS[i],url=resolveAudio(c.id),a=document.getElementById('audioEl');
   if(url){a.src=url;a.load();}else a.removeAttribute('src');
   document.getElementById('playBtn').disabled=!url;
-  document.getElementById('playerName').textContent=url?`${c.label} · ${c.id}`:`${c.label} · no audio loaded`;
+  document.getElementById('playerName').textContent=url?`${c.label} · ${c.desc}`:`${c.label} · no audio loaded`;
   document.getElementById('progFill').style.width='0%';
   document.getElementById('timeLbl').textContent='0:00 / 0:00';
   curRating=userRatings[c.id]||null;
@@ -432,11 +420,14 @@ function drawCx(hv,ha){
   ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
   drawGrid(ctx,w,h);
   // study points
-  // study points hidden during rating to avoid anchoring bias
-  // prior ratings
+  // A clip's study average is revealed only after you confirm it (no anchoring before you rate).
+  // prior ratings, each linked to the study average for that clip
   Object.entries(userRatings).forEach(([id,r])=>{
     const clip=CLIPS.find(c=>c.id===id);if(!clip)return;
-    const xy=toXY(r.v,r.a,w,h);
+    const xy=toXY(r.v,r.a,w,h),m=toXY(clip.mv,clip.ma,w,h);
+    ctx.beginPath();ctx.moveTo(xy.x,xy.y);ctx.lineTo(m.x,m.y);ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(m.x,m.y,6,0,Math.PI*2);ctx.fillStyle='rgba(15,14,12,0.12)';ctx.fill();ctx.strokeStyle='rgba(15,14,12,0.45)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='rgba(15,14,12,0.55)';ctx.font='9px "DM Mono",monospace';ctx.fillText(clip.label.replace('Clip ','')+' study avg',m.x+9,m.y+3);
     ctx.beginPath();ctx.arc(xy.x,xy.y,8,0,Math.PI*2);ctx.fillStyle='#2a6b8a2a';ctx.fill();ctx.strokeStyle='#2a6b8a';ctx.lineWidth=1.5;ctx.stroke();
     ctx.fillStyle='#2a6b8a';ctx.font='9px "DM Mono",monospace';ctx.fillText(clip.label,xy.x+10,xy.y+3);
   });
@@ -498,7 +489,14 @@ function updateUI(){
 function clearRating(){curRating=null;drawCx();updateUI();}
 function submitRating(){
   if(!curRating||curClip===null)return;
-  userRatings[CLIPS[curClip].id]={v:curRating.v,a:curRating.a};
+  const done=CLIPS[curClip];
+  userRatings[done.id]={v:curRating.v,a:curRating.a};
+  const dv=curRating.v-done.mv,da=curRating.a-done.ma;
+  const word=(d,pos,neg)=>Math.abs(d)<0.1?null:`${d>0?pos:neg}`;
+  const diffs=[word(dv,'more pleasant','less pleasant'),word(da,'more energized','calmer')].filter(Boolean);
+  document.getElementById('lastCmp').innerHTML=`<b>${done.label}:</b> you placed it `+
+    (diffs.length?diffs.join(' and ')+' than the study average.':'close to the study average.')+
+    ' The grey dot on the grid marks where participants placed it.';
   const n=Object.keys(userRatings).length;
   document.getElementById('ratedCount').textContent=`${n} / ${CLIPS.length} placed`;
   buildClipList();
